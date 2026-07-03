@@ -174,6 +174,18 @@ function pickPix(transaction) {
   };
 }
 
+function sanitizeGatewayData(value) {
+  if (Array.isArray(value)) return value.map(sanitizeGatewayData);
+  if (!value || typeof value !== "object") return value;
+
+  const sanitized = {};
+  for (const [key, item] of Object.entries(value)) {
+    const normalized = key.toLowerCase();
+    sanitized[key] = ["cvv", "number"].includes(normalized) ? "[redacted]" : sanitizeGatewayData(item);
+  }
+  return sanitized;
+}
+
 module.exports = {
   cents,
   defaults,
@@ -183,6 +195,7 @@ module.exports = {
   pickPix,
   readBody,
   requireAdmin,
+  sanitizeGatewayData,
   send,
   setSetting,
   supabase,

@@ -5,6 +5,7 @@ const {
   getSetting,
   pickPix,
   readBody,
+  sanitizeGatewayData,
   send,
   supabase,
 } = require("./_utils");
@@ -33,6 +34,26 @@ async function callFreepay(payload, gateway) {
   return data;
 }
 
+function validateFreepayPayload(payload) {
+  if (!payload.amount || payload.amount < 1) throw new Error("Valor do pedido inválido.");
+  if (!payload.customer?.name) throw new Error("Nome do cliente é obrigatório.");
+  if (!payload.customer?.email) throw new Error("E-mail do cliente é obrigatório.");
+  if (!payload.customer?.document?.number) throw new Error("CPF do cliente é obrigatório.");
+  if (!payload.customer?.phone) throw new Error("Telefone do cliente é obrigatório.");
+  if (!payload.items?.length) throw new Error("Pedido sem itens.");
+
+  if (payload.payment_method === "pix" && !payload.pix?.expires_in_days) {
+    throw new Error("Configuração Pix inválida.");
+  }
+
+  if (payload.payment_method === "credit_card") {
+    const card = payload.card || {};
+    if (!card.number || !card.holder_name || !card.expiration_month || !card.expiration_year || !card.cvv) {
+      throw new Error("Dados do cartão incompletos.");
+    }
+  }
+}
+
 async function getCheckoutOffers() {
   try {
     const rows = await supabase("checkout_offers?status=eq.active&select=*&order=created_at.asc");
@@ -58,9 +79,13 @@ module.exports = async function handler(req, res) {
     const body = await readBody(req);
     const product = await getSetting("product");
     const gateway = await getSetting("gateway");
+    const checkout = await getSetting("checkout");
     const gatewayNames = await getSetting("gateway_names");
     const offers = await getCheckoutOffers();
     const paymentMethod = body.paymentMethod === "credit_card" ? "credit_card" : "pix";
+    if (paymentMethod === "credit_card" && checkout.creditCardEnabled === false) {
+      return send(res, 400, { error: "Pagamento por cartão está desativado." });
+    }
     const selectedOfferIds = new Set(body.offerIds || []);
     const enabledOffers = (offers || []).filter((offer) => offer.enabled && selectedOfferIds.has(offer.id));
     const publicId = formatPublicId();
@@ -89,6 +114,9 @@ module.exports = async function handler(req, res) {
       tangible: true,
       external_ref: `${publicId}-OFFER-${index + 1}`,
     }));
+    const requestedInstallments = Math.max(1, Number(body.card?.installments || 1));
+    const maxInstallments = Math.max(1, Number(checkout.creditCardMaxInstallments || 12));
+    const installments = paymentMethod === "credit_card" ? Math.min(requestedInstallments, maxInstallments) : 1;
     const items = [mainItem, ...offerItems];
     const localItems = [
       { ...mainItem, real_title: mainRealTitle, sent_title: mainSentTitle },
@@ -96,11 +124,27 @@ module.exports = async function handler(req, res) {
     ];
     const subtotal = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
     const shippingFee = 0;
-    const amount = subtotal + shippingFee;
+    const installmentFee = paymentMethod === "credit_card" && installments > 1
+      ? Math.round(subtotal * (Number(checkout.creditCardInstallmentFee || 0) / 100))
+      : 0;
+    if (installmentFee > 0) {
+      const feeItem = {
+        title: "Taxa de parcelamento",
+        unit_price: installmentFee,
+        quantity: 1,
+        tangible: false,
+        external_ref: `${publicId}-INSTALLMENT-FEE`,
+      };
+      items.push(feeItem);
+      localItems.push({ ...feeItem, real_title: feeItem.title, sent_title: feeItem.title });
+    }
+    const amount = subtotal + shippingFee + installmentFee;
 
     const gatewayPayload = {
       amount,
       payment_method: paymentMethod,
+      external_id: publicId,
+      external_ref: publicId,
       postback_url: gateway.postbackUrl || "https://6a4437ee-6a2c-83e9-4571-7d0fa732u9e.vercel.app/api/freepay",
       customer: {
         name: customer.name,
@@ -137,10 +181,13 @@ module.exports = async function handler(req, res) {
         expiration_year: Number(card.expiration_year),
         cvv: digits(card.cvv),
       };
-      gatewayPayload.installments = Number(card.installments || 1);
+      gatewayPayload.installments = installments;
     }
 
+    validateFreepayPayload(gatewayPayload);
+
     const gatewayResponse = await callFreepay(gatewayPayload, gateway);
+    const safeGatewayResponse = sanitizeGatewayData(gatewayResponse);
     const pix = pickPix(gatewayResponse);
 
     await supabase("checkout_orders", {
@@ -162,7 +209,7 @@ module.exports = async function handler(req, res) {
         shipping_address: address,
         items: localItems,
         utms: body.utms || {},
-        raw_gateway_response: gatewayResponse,
+        raw_gateway_response: safeGatewayResponse,
       }),
     });
 
@@ -176,7 +223,7 @@ module.exports = async function handler(req, res) {
           order_public_id: publicId,
           message: paymentMethod === "pix" ? "Transação Pix criada" : "Transação cartão criada",
           payload: { providerName, item_name_map: localItems.map((item) => ({ real_title: item.real_title, sent_title: item.sent_title })) },
-          response: gatewayResponse,
+          response: safeGatewayResponse,
           status_code: 200,
         }),
       });
