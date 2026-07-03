@@ -339,6 +339,11 @@ async function lookupCep(rawCep) {
       SE: "Sergipe", TO: "Tocantins",
     };
 
+    $("#street").value = data.logradouro || "";
+    $("#neighborhood").value = data.bairro || "";
+    $("#city").value = data.localidade || "";
+    if (states[data.uf]) $("#state").value = states[data.uf];
+
     [$("#street"), $("#neighborhood"), $("#city")].forEach((el) => el.removeAttribute("readonly"));
 
     status.className = "cep-status success";
