@@ -7,6 +7,7 @@ const {
   readBody,
   sanitizeGatewayData,
   send,
+  sendToUtmify,
   supabase,
 } = require("./_utils");
 
@@ -279,6 +280,35 @@ module.exports = async function handler(req, res) {
         raw_gateway_response: safeGatewayResponse,
       }),
     });
+
+    try {
+      await sendToUtmify({
+        public_id: publicId,
+        external_order_id: externalOrderId,
+        status: pix.status || "PENDING",
+        amount,
+        payment_method: paymentMethod,
+        created_at: new Date().toISOString(),
+        customer: { ...customer, phone: customerPhone, cpf: digits(customer.cpf) },
+        items: localItems,
+        utms: body.utms || {},
+      });
+    } catch (_) {
+      try {
+        await supabase("checkout_logs", {
+          method: "POST",
+          body: JSON.stringify({
+            type: "utmify",
+            level: "error",
+            source: "utmify",
+            order_public_id: publicId,
+            message: "Erro ao enviar pedido para UTMify",
+            payload: { order_public_id: publicId },
+            status_code: 400,
+          }),
+        });
+      } catch (__) {}
+    }
 
     try {
       await supabase("checkout_logs", {

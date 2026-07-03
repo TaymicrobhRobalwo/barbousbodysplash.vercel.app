@@ -181,6 +181,92 @@ function pickPix(transaction) {
   };
 }
 
+function formatUtmifyDate(date) {
+  if (!date) return null;
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().replace("T", " ").slice(0, 19);
+}
+
+const UTMIFY_STATUS_MAP = {
+  PENDING: "waiting_payment",
+  CREATED: "waiting_payment",
+  WAITING: "waiting_payment",
+  PAID: "paid",
+  APPROVED: "paid",
+  COMPLETED: "paid",
+  EXPIRED: "refused",
+  REFUSED: "refused",
+  CANCELLED: "refunded",
+  CANCELED: "refunded",
+  REFUNDED: "refunded",
+  CHARGEDBACK: "chargedback",
+};
+
+async function sendToUtmify(order, isTest = false) {
+  const integrations = await getSetting("integrations");
+  if (!integrations.utmifyEnabled || !integrations.utmifyToken) return null;
+
+  const status = UTMIFY_STATUS_MAP[order.status] || "waiting_payment";
+  const utms = order.utms || {};
+
+  const payload = {
+    orderId: order.public_id || order.external_order_id,
+    platform: "BarboursBeauty",
+    paymentMethod: order.payment_method || "pix",
+    status,
+    createdAt: formatUtmifyDate(order.created_at || new Date()),
+    approvedDate: status === "paid" ? formatUtmifyDate(order.updated_at || new Date()) : null,
+    refundedAt: ["refunded", "chargedback"].includes(status) ? formatUtmifyDate(order.updated_at || new Date()) : null,
+    customer: {
+      name: order.customer?.name || "",
+      email: order.customer?.email || "",
+      phone: order.customer?.phone || null,
+      document: order.customer?.cpf || null,
+      country: "BR",
+    },
+    products: (order.items || []).map((item, i) => ({
+      id: item.external_ref || String(i),
+      name: item.real_title || item.title || item.sent_title || `Item ${i + 1}`,
+      planId: null,
+      planName: null,
+      quantity: item.quantity || 1,
+      priceInCents: item.unit_price || 0,
+    })),
+    trackingParameters: {
+      src: utms.fbclid || utms.src || null,
+      sck: utms.sck || null,
+      utm_source: utms.utm_source || null,
+      utm_campaign: utms.utm_campaign || null,
+      utm_medium: utms.utm_medium || null,
+      utm_content: utms.utm_content || null,
+      utm_term: utms.utm_term || null,
+    },
+    commission: {
+      totalPriceInCents: order.amount || 0,
+      gatewayFeeInCents: 0,
+      userCommissionInCents: order.amount || 0,
+    },
+  };
+
+  if (isTest) payload.isTest = true;
+
+  const response = await fetch("https://api.utmify.com.br/api-credentials/orders", {
+    method: "POST",
+    headers: {
+      "x-api-token": integrations.utmifyToken,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const text = await response.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (_) { data = text; }
+
+  return { ok: response.ok, status: response.status, data, payload };
+}
+
 function sanitizeGatewayData(value) {
   if (Array.isArray(value)) return value.map(sanitizeGatewayData);
   if (!value || typeof value !== "object") return value;
@@ -198,12 +284,14 @@ module.exports = {
   defaults,
   digits,
   formatPublicId,
+  formatUtmifyDate,
   getSetting,
   pickPix,
   readBody,
   requireAdmin,
   sanitizeGatewayData,
   send,
+  sendToUtmify,
   setSetting,
   supabase,
 };

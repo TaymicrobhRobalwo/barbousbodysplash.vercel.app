@@ -1,4 +1,4 @@
-const { readBody, sanitizeGatewayData, send, supabase } = require("./_utils");
+const { readBody, sanitizeGatewayData, send, sendToUtmify, supabase } = require("./_utils");
 
 module.exports = async function handler(req, res) {
   try {
@@ -20,10 +20,32 @@ module.exports = async function handler(req, res) {
       const filters = [];
       if (transactionId) filters.push(`freepay_transaction_id.eq.${encodeURIComponent(transactionId)}`);
       if (externalId) filters.push(`external_order_id.eq.${encodeURIComponent(externalId)}`);
-      await supabase(`checkout_orders?or=(${filters.join(",")})`, {
+      const orClause = `or=(${filters.join(",")})`;
+      await supabase(`checkout_orders?${orClause}`, {
         method: "PATCH",
         body: JSON.stringify({ status, updated_at: new Date().toISOString(), raw_gateway_response: safeEvent }),
       });
+
+      try {
+        const rows = await supabase(`checkout_orders?${orClause}&select=*`);
+        if (rows?.[0]) {
+          await sendToUtmify(rows[0]);
+        }
+      } catch (_) {
+        try {
+          await supabase("checkout_logs", {
+            method: "POST",
+            body: JSON.stringify({
+              type: "utmify",
+              level: "error",
+              source: "utmify",
+              message: "Erro ao atualizar pedido na UTMify",
+              payload: { transactionId, externalId, status },
+              status_code: 400,
+            }),
+          });
+        } catch (__) {}
+      }
     }
 
     send(res, 200, { ok: true });
