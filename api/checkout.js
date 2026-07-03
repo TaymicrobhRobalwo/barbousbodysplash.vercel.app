@@ -206,7 +206,6 @@ module.exports = async function handler(req, res) {
       },
       items: gatewayItems,
       metadata,
-      ip: getClientIp(req),
     };
 
     if (paymentMethod === "pix") {
@@ -224,10 +223,19 @@ module.exports = async function handler(req, res) {
     }
 
     validateFreepayPayload(gatewayPayload);
+    const pixOnlyPayload = paymentMethod === "pix" ? {
+      payment_method: paymentMethod,
+      customer: gatewayPayload.customer,
+      items: gatewayItems,
+      amount,
+      postback_url: gatewayPayload.postback_url,
+      metadata,
+      pix: { expires_in_days: Number(gateway.pixExpiresInDays || 1) },
+    } : gatewayPayload;
 
     let gatewayResponse;
     try {
-      gatewayResponse = await callFreepay(gatewayPayload, gateway);
+      gatewayResponse = await callFreepay(pixOnlyPayload, gateway);
     } catch (error) {
       try {
         await supabase("checkout_logs", {
@@ -238,7 +246,7 @@ module.exports = async function handler(req, res) {
             source: "freepay",
             order_public_id: publicId,
             message: "Erro ao criar transação Freepay",
-            payload: sanitizeGatewayData({ ...gatewayPayload, card: undefined }),
+            payload: sanitizeGatewayData(pixOnlyPayload),
             response: { error: error.message },
             status_code: 400,
           }),
