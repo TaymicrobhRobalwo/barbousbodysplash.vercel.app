@@ -95,8 +95,8 @@
         <label>E-mail<input name="email" type="email" placeholder="seuemail@hotmail.com"></label>
         <label class="checkline"><input name="noEmail" type="checkbox"> Não tenho e-mail</label>
         <div class="grid2">
-          <label>Telefone<input name="phone" inputmode="tel" placeholder="DDD + número" required></label>
-          <label>CPF<input name="cpf" inputmode="numeric" placeholder="123.456.789-12" required></label>
+          <label>Telefone<input name="phone" id="phone" inputmode="tel" maxlength="15" placeholder="(21) 99999-9999" required></label>
+          <label>CPF<input name="cpf" id="cpf" inputmode="numeric" maxlength="14" placeholder="123.456.789-12" required></label>
         </div>
         <button class="primary" type="submit">Ir para a entrega</button>
       </form>

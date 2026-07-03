@@ -16,6 +16,22 @@ const $ = (selector) => document.querySelector(selector);
 const money = (cents) => (Number(cents || 0) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }).replace(/\s/g, "");
 const digits = (value) => String(value || "").replace(/\D/g, "");
 
+function formatPhone(value) {
+  const d = digits(value).slice(0, 11);
+  if (d.length <= 2) return d ? `(${d}` : "";
+  if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+
+function formatCpf(value) {
+  const d = digits(value).slice(0, 11);
+  return d
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d)/, "$1.$2")
+    .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+}
+
 function show(id) {
   document.querySelectorAll(".screen").forEach((screen) => screen.classList.remove("active"));
   $("#" + id).classList.add("active");
@@ -229,6 +245,12 @@ $("#copyPix").onclick = async () => { await navigator.clipboard.writeText($("#pi
 $("#customerForm").onsubmit = (event) => {
   event.preventDefault();
   state.customer = Object.fromEntries(new FormData(event.currentTarget));
+  state.customer.phone = formatPhone(state.customer.phone);
+  state.customer.cpf = formatCpf(state.customer.cpf);
+  const phoneDigits = digits(state.customer.phone);
+  const cpfDigits = digits(state.customer.cpf);
+  if (phoneDigits.length < 10 || phoneDigits.length > 11) return alert("Informe um telefone válido com DDD.");
+  if (cpfDigits.length !== 11) return alert("Informe um CPF válido.");
   state.customer.noEmail = event.currentTarget.noEmail.checked;
   show("addressScreen");
 };
@@ -274,6 +296,14 @@ $("#cardNumber").addEventListener("input", (event) => {
 $("#cardValidity").addEventListener("input", (event) => {
   const value = digits(event.target.value).slice(0, 4);
   event.target.value = value.length > 2 ? `${value.slice(0, 2)}/${value.slice(2)}` : value;
+});
+
+$("#phone").addEventListener("input", (event) => {
+  event.target.value = formatPhone(event.target.value);
+});
+
+$("#cpf").addEventListener("input", (event) => {
+  event.target.value = formatCpf(event.target.value);
 });
 
 $("#cep").addEventListener("blur", async (event) => {
