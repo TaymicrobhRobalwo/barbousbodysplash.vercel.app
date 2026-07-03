@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Admin Checkout | Barbour's Beauty</title>
+  <title>Painel</title>
   <link rel="stylesheet" href="admin.css">
 </head>
-<body>
+<body class="auth-pending">
   <aside>
-    <h1>Checkout Admin</h1>
+    <h1>Painel</h1>
     <button data-tab="settings" class="active">Configurações</button>
     <button data-tab="gateway">Gateway Pix</button>
     <button data-tab="orders">Pedidos</button>
@@ -17,10 +17,10 @@
   </aside>
   <main>
     <div id="login" class="login card">
-      <h2>Acesso admin</h2>
-      <p>Informe o `ADMIN_TOKEN` configurado na Vercel.</p>
-      <input id="token" type="password" placeholder="ADMIN_TOKEN">
+      <h2>Acesso</h2>
+      <input id="token" type="password" placeholder="Senha" autocomplete="current-password">
       <button id="saveToken">Entrar</button>
+      <p id="loginError" class="login-error hidden">Acesso negado</p>
     </div>
 
     <section id="app" class="hidden">
@@ -44,7 +44,7 @@
 
       <div id="gateway" class="tab card">
         <h3>Chaves Freepay</h3>
-        <p class="warn">As chaves são salvas no Supabase via backend. Use HTTPS e mantenha o ADMIN_TOKEN privado.</p>
+        <p class="warn">As chaves são armazenadas com acesso restrito pelo backend.</p>
         <div class="grid">
           <label>Public Key<input id="publicKey"></label>
           <label>Secret Key<input id="secretKey" type="password"></label>

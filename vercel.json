@@ -1,7 +1,7 @@
 {
   "rewrites": [
     { "source": "/checkout", "destination": "/checkout.html" },
-    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/portal-elly-9x7q", "destination": "/portal-elly-9x7q.html" },
     { "source": "/kit4", "destination": "/kit4.html" }
   ],
   "headers": [

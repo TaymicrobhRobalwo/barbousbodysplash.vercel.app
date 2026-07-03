@@ -20,11 +20,41 @@ async function api(path, options = {}) {
   return data;
 }
 
-function requireLogin() {
-  if (!token) return;
+function setLoginError(message = "Acesso negado") {
+  const error = $("#loginError");
+  error.textContent = message;
+  error.classList.remove("hidden");
+}
+
+function showLogin() {
+  document.body.classList.add("auth-pending");
+  $("#login").classList.remove("hidden");
+  $("#app").classList.add("hidden");
+}
+
+function showApp() {
+  document.body.classList.remove("auth-pending");
   $("#login").classList.add("hidden");
   $("#app").classList.remove("hidden");
-  loadAll();
+}
+
+async function requireLogin(candidate = token, persist = false) {
+  if (!candidate) return showLogin();
+  const previousToken = token;
+  token = candidate;
+  try {
+    settings = await api("/api/settings");
+    if (persist) localStorage.setItem("admin_token", token);
+    $("#loginError").classList.add("hidden");
+    showApp();
+    renderSettings();
+    await loadPixels();
+  } catch (error) {
+    token = previousToken;
+    localStorage.removeItem("admin_token");
+    showLogin();
+    setLoginError(error.message === "Unauthorized" ? "Acesso negado" : "Acesso negado");
+  }
 }
 
 function switchTab(id) {
@@ -162,14 +192,15 @@ async function addPixel(root) {
 }
 
 $("#saveToken").onclick = () => {
-  token = $("#token").value;
-  localStorage.setItem("admin_token", token);
-  requireLogin();
+  requireLogin($("#token").value.trim(), true);
 };
+$("#token").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") requireLogin($("#token").value.trim(), true);
+});
 $("#reload").onclick = loadAll;
 $$('aside button').forEach((button) => button.onclick = () => switchTab(button.dataset.tab));
 $("#addOffer").onclick = () => { settings.offers.push({ id: `offer-${Date.now()}`, name: "Nova oferta", price: 1990, compareAtPrice: 3990, image: "IMG_2112.PNG.png", enabled: true }); renderOffers(); };
 $("#saveSettings").onclick = async () => { collectSettings(); await api("/api/settings", { method: "POST", body: JSON.stringify({ product: settings.product, offers: settings.offers }) }); alert("Configurações salvas"); };
 $("#saveGateway").onclick = async () => { collectSettings(); await api("/api/settings", { method: "POST", body: JSON.stringify({ gateway: settings.gateway }) }); alert("Gateway salvo"); };
 $$('.addPixel').forEach((button) => button.onclick = () => addPixel(button.closest(".pixel-tab")));
-requireLogin();
+requireLogin(token, false);
