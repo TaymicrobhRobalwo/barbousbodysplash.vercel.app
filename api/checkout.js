@@ -38,8 +38,26 @@ function phoneVariants(value) {
   const number = d.slice(2);
   return {
     digits: d,
-    lower: { country_code: "55", area_code: areaCode, number },
-    pascal: { CountryCode: "55", AreaCode: areaCode, Number: number },
+    formatted: `+55${areaCode}${number}`,
+    object: { country_code: "55", area_code: areaCode, number },
+  };
+}
+
+function withFreepayAliases(payload) {
+  return {
+    ...payload,
+    Amount: payload.amount,
+    PaymentMethod: payload.payment_method,
+    PostbackUrl: payload.postback_url,
+    Customer: payload.customer,
+    Items: payload.items,
+    Shipping: payload.shipping,
+    Pix: payload.pix,
+    Card: payload.card,
+    Boleto: payload.boleto,
+    Installments: payload.installments,
+    Metadata: payload.metadata,
+    Ip: payload.ip,
   };
 }
 
@@ -197,10 +215,14 @@ module.exports = async function handler(req, res) {
       postback_url: getSystemWebhookUrl(req),
       customer: {
         name: customer.name,
+        Name: customer.name,
         email: customer.noEmail ? `${publicId.toLowerCase()}@cliente.local` : customer.email,
+        Email: customer.noEmail ? `${publicId.toLowerCase()}@cliente.local` : customer.email,
         document: { number: digits(customer.cpf), type: "cpf" },
+        Document: { Number: digits(customer.cpf), Type: "cpf" },
         phone: customerPhone.digits,
-        Phone: customerPhone.pascal,
+        Phone: customerPhone.digits,
+        phone_object: customerPhone.object,
       },
       shipping: {
         fee: shippingFee,
@@ -235,10 +257,11 @@ module.exports = async function handler(req, res) {
     }
 
     validateFreepayPayload(gatewayPayload);
+    const freepayPayload = withFreepayAliases(gatewayPayload);
 
     let gatewayResponse;
     try {
-      gatewayResponse = await callFreepay(gatewayPayload, gateway);
+      gatewayResponse = await callFreepay(freepayPayload, gateway);
     } catch (error) {
       try {
         await supabase("checkout_logs", {
@@ -249,7 +272,7 @@ module.exports = async function handler(req, res) {
             source: "freepay",
             order_public_id: publicId,
             message: "Erro ao criar transação Freepay",
-            payload: sanitizeGatewayData({ ...gatewayPayload, card: undefined }),
+            payload: sanitizeGatewayData({ ...freepayPayload, card: undefined, Card: undefined }),
             response: { error: error.message },
             status_code: 400,
           }),
