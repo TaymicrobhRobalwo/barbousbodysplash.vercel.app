@@ -21,44 +21,12 @@ function getSystemWebhookUrl(req) {
   return `${proto}://${host}/api/freepay`;
 }
 
-function phonePayload(value) {
-  const d = digits(value).slice(-11);
-  if (d.length < 10) return null;
-  return {
-    country_code: "55",
-    area_code: d.slice(0, 2),
-    number: d.slice(2),
-  };
-}
-
 function phoneVariants(value) {
-  const d = digits(value).slice(-11);
+  let d = digits(value);
+  if (d.startsWith("55") && d.length >= 12) d = d.slice(2);
+  d = d.slice(0, 11);
   if (d.length < 10) return null;
-  const areaCode = d.slice(0, 2);
-  const number = d.slice(2);
-  return {
-    digits: d,
-    formatted: `+55${areaCode}${number}`,
-    object: { country_code: "55", area_code: areaCode, number },
-  };
-}
-
-function withFreepayAliases(payload) {
-  return {
-    ...payload,
-    Amount: payload.amount,
-    PaymentMethod: payload.payment_method,
-    PostbackUrl: payload.postback_url,
-    Customer: payload.customer,
-    Items: payload.items,
-    Shipping: payload.shipping,
-    Pix: payload.pix,
-    Card: payload.card,
-    Boleto: payload.boleto,
-    Installments: payload.installments,
-    Metadata: payload.metadata,
-    Ip: payload.ip,
-  };
+  return `55${d}`;
 }
 
 async function callFreepay(payload, gateway) {
@@ -72,7 +40,7 @@ async function callFreepay(payload, gateway) {
       authorization: "Basic " + Buffer.from(`${publicKey}:${secretKey}`).toString("base64"),
       "content-type": "application/json",
     },
-    body: JSON.stringify({ request: payload }),
+    body: JSON.stringify(payload),
   });
 
   const text = await response.text();
@@ -92,7 +60,7 @@ function validateFreepayPayload(payload) {
   if (!payload.customer?.name) throw new Error("Nome do cliente é obrigatório.");
   if (!payload.customer?.email) throw new Error("E-mail do cliente é obrigatório.");
   if (!payload.customer?.document?.number) throw new Error("CPF do cliente é obrigatório.");
-  if (!payload.customer?.phone && !payload.customer?.Phone) throw new Error("Telefone do cliente é obrigatório.");
+  if (!payload.customer?.phone) throw new Error("Telefone do cliente é obrigatório.");
   if (!payload.items?.length) throw new Error("Pedido sem itens.");
 
   if (payload.payment_method === "pix" && !payload.pix?.expires_in_days) {
@@ -199,7 +167,11 @@ module.exports = async function handler(req, res) {
       localItems.push({ ...feeItem, real_title: feeItem.title, sent_title: feeItem.title });
     }
     const amount = subtotal + shippingFee + installmentFee;
-    const gatewayItems = items.map(({ external_ref, ...item }) => item);
+    const gatewayItems = items.map((item) => ({
+      title: item.title,
+      unit_price: item.unit_price,
+      quantity: item.quantity,
+    }));
 
     const metadata = {
       provider_name: providerName,
@@ -214,15 +186,10 @@ module.exports = async function handler(req, res) {
       payment_method: paymentMethod,
       postback_url: getSystemWebhookUrl(req),
       customer: {
-        name: customer.name,
-        Name: customer.name,
-        email: customer.noEmail ? `${publicId.toLowerCase()}@cliente.local` : customer.email,
-        Email: customer.noEmail ? `${publicId.toLowerCase()}@cliente.local` : customer.email,
         document: { number: digits(customer.cpf), type: "cpf" },
-        Document: { Number: digits(customer.cpf), Type: "cpf" },
-        phone: customerPhone.digits,
-        Phone: customerPhone.digits,
-        phone_object: customerPhone.object,
+        name: customer.name,
+        email: customer.noEmail ? `${publicId.toLowerCase()}@cliente.local` : customer.email,
+        phone: customerPhone,
       },
       shipping: {
         fee: shippingFee,
@@ -257,11 +224,10 @@ module.exports = async function handler(req, res) {
     }
 
     validateFreepayPayload(gatewayPayload);
-    const freepayPayload = withFreepayAliases(gatewayPayload);
 
     let gatewayResponse;
     try {
-      gatewayResponse = await callFreepay(freepayPayload, gateway);
+      gatewayResponse = await callFreepay(gatewayPayload, gateway);
     } catch (error) {
       try {
         await supabase("checkout_logs", {
@@ -272,7 +238,7 @@ module.exports = async function handler(req, res) {
             source: "freepay",
             order_public_id: publicId,
             message: "Erro ao criar transação Freepay",
-            payload: sanitizeGatewayData({ ...freepayPayload, card: undefined, Card: undefined }),
+            payload: sanitizeGatewayData({ ...gatewayPayload, card: undefined }),
             response: { error: error.message },
             status_code: 400,
           }),
