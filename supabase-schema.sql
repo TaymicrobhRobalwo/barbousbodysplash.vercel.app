@@ -194,7 +194,7 @@ values
   ('gateway', '{"providerName":"Elly Perfumaria","postbackUrl":"https://6a4437ee-6a2c-83e9-4571-7d0fa732u9e.vercel.app/api/freepay","pixExpiresInDays":1}'::jsonb),
   ('store', '{"storeName":"Barbour''s Beauty","domain":"","whatsapp":"","supportEmail":"","defaultCity":"","defaultState":"","status":"active","closedMessage":"Loja temporariamente fechada.","currency":"BRL","timezone":"America/Sao_Paulo"}'::jsonb),
   ('checkout', '{"timerMinutes":20,"pixDiscount":0,"buttonText":"Pagar","securityText":"Seus dados estão seguros conosco","quickBuy":true,"skipCart":true,"couponEnabled":false,"phoneRequired":true,"cpfRequired":true,"addressRequired":true,"emailAutocomplete":true,"masksEnabled":true}'::jsonb),
-  ('branding', '{"logo":"","favicon":"","primaryColor":"#e7425d","secondaryColor":"#101828","buttonColor":"#e7425d","backgroundColor":"#f5f7fb","textColor":"#101828","fontPrimary":"Inter","fontHeadings":"Inter","backgroundImage":"","mainBanner":""}'::jsonb),
+  ('branding', '{"logo":"","favicon":"","primaryColor":"#FE2C56","secondaryColor":"#101828","buttonColor":"#FE2C56","backgroundColor":"#f5f7fb","textColor":"#101828","fontPrimary":"Inter","fontHeadings":"Inter","backgroundImage":"","mainBanner":""}'::jsonb),
   ('gateway_names', '{"enabled":false,"names":[],"dedupe":true}'::jsonb),
   ('appearance', '{"badges":[],"reviews":[],"faq":[],"footerText":""}'::jsonb),
   ('integrations', '{"utmifyToken":"","utmifyEnabled":false,"sendPending":true,"sendPaid":true,"sendCanceled":false,"externalScripts":"","extraWebhook":""}'::jsonb),

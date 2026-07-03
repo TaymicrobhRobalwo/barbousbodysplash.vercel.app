@@ -6,6 +6,8 @@ const state = {
   customer: {},
   address: {},
   pixels: [],
+  checkout: {},
+  branding: {},
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -42,13 +44,14 @@ function renderOffer() {
   const offer = state.offers[state.offerIndex];
   if (!offer) return;
   const selected = state.selectedOffers.has(offer.id);
+  const name = offer.name || offer.title || "Oferta especial";
   $("#offerCard").innerHTML = `
-    <img src="${offer.image}" alt="${offer.name}">
-    <h3>${offer.name}</h3>
+    <img src="${offer.image || "IMG_2112.PNG.png"}" alt="${name}">
+    <h3>${name}</h3>
     <del>${money(offer.compareAtPrice)}</del>
     <strong>${money(offer.price)}</strong>
     <button type="button" class="${selected ? "selected" : ""}" id="toggleOffer"><span></span>PEGAR OFERTA</button>
-    <p>Aplique antes do Body Splash e seu cheiro dura o DIA INTEIRO.</p>
+    <p>${offer.description || "Aplique antes do Body Splash e seu cheiro dura o DIA INTEIRO."}</p>
     <a href="#">Ver mais</a>
   `;
   $("#offerDots").innerHTML = state.offers.map((_, index) => `<span class="${index === state.offerIndex ? "active" : ""}"></span>`).join("");
@@ -58,6 +61,18 @@ function renderOffer() {
     updateTotals();
     renderOffer();
   };
+}
+
+function applyCheckoutTheme() {
+  const branding = state.branding || {};
+  const checkout = state.checkout || {};
+  const primary = branding.buttonColor || branding.primaryColor || "#FE2C56";
+  document.documentElement.style.setProperty("--checkout-primary", primary);
+  document.documentElement.style.setProperty("--checkout-text", branding.textColor || "#161823");
+  document.documentElement.style.setProperty("--checkout-font", `${branding.fontPrimary || "Inter"}, Arial, sans-serif`);
+  document.body.style.background = branding.backgroundColor || "#f4f4f5";
+  if (checkout.buttonText) $("#payButton").textContent = checkout.buttonText;
+  if (checkout.securityText) document.querySelector(".topbar span").textContent = `♡ ${checkout.securityText}`;
 }
 
 function startCountdown(minutes, target) {
@@ -147,6 +162,8 @@ async function init() {
   try {
     const config = await fetch("/api/config").then((res) => res.json());
     state.product = config.product;
+    state.checkout = config.checkout || {};
+    state.branding = config.branding || {};
     state.offers = (config.offers || []).filter((offer) => offer.enabled);
     state.pixels = config.pixels || [];
   } catch (_) {
@@ -158,9 +175,10 @@ async function init() {
   $("#productPrice").textContent = money(state.product.price);
   $("#productImage").src = state.product.image || "IMG_2103.jpg";
   $("#offerCount").textContent = `${state.offers.length} ofertas`;
+  applyCheckoutTheme();
   updateTotals();
   renderOffer();
-  startCountdown(state.product.expirationMinutes || 20, $("#countdown"));
+  startCountdown(state.checkout.timerMinutes || state.product.expirationMinutes || 20, $("#countdown"));
   startCountdown(10, $("#pixCountdown"));
   loadPixels();
   track("InitiateCheckout", { value: total() / 100, currency: "BRL" });

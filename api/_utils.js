@@ -46,9 +46,9 @@ const defaults = {
   branding: {
     logo: "",
     favicon: "",
-    primaryColor: "#e7425d",
+    primaryColor: "#FE2C56",
     secondaryColor: "#101828",
-    buttonColor: "#e7425d",
+    buttonColor: "#FE2C56",
     backgroundColor: "#f5f7fb",
     textColor: "#101828",
     fontPrimary: "Inter",

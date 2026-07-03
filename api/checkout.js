@@ -33,6 +33,24 @@ async function callFreepay(payload, gateway) {
   return data;
 }
 
+async function getCheckoutOffers() {
+  try {
+    const rows = await supabase("checkout_offers?status=eq.active&select=*&order=created_at.asc");
+    const mapped = rows
+      .filter((offer) => ["order_bump", "checkout", "cart"].includes(offer.type) || ["checkout", "cart"].includes(offer.placement))
+      .map((offer) => ({
+        id: offer.id,
+        name: offer.title,
+        price: offer.price,
+        compareAtPrice: offer.compare_at_price,
+        image: offer.image,
+        enabled: offer.status === "active",
+      }));
+    if (mapped.length) return mapped;
+  } catch (_) {}
+  return getSetting("offers");
+}
+
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== "POST") return send(res, 405, { error: "Method not allowed" });
@@ -41,7 +59,7 @@ module.exports = async function handler(req, res) {
     const product = await getSetting("product");
     const gateway = await getSetting("gateway");
     const gatewayNames = await getSetting("gateway_names");
-    const offers = await getSetting("offers");
+    const offers = await getCheckoutOffers();
     const selectedOfferIds = new Set(body.offerIds || []);
     const enabledOffers = (offers || []).filter((offer) => offer.enabled && selectedOfferIds.has(offer.id));
     const publicId = formatPublicId();
