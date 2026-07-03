@@ -31,6 +31,18 @@ function phonePayload(value) {
   };
 }
 
+function phoneVariants(value) {
+  const d = digits(value).slice(-11);
+  if (d.length < 10) return null;
+  const areaCode = d.slice(0, 2);
+  const number = d.slice(2);
+  return {
+    digits: d,
+    lower: { country_code: "55", area_code: areaCode, number },
+    pascal: { CountryCode: "55", AreaCode: areaCode, Number: number },
+  };
+}
+
 async function callFreepay(payload, gateway) {
   const publicKey = gateway.publicKey || process.env.FREEPAY_PUBLIC_KEY;
   const secretKey = gateway.secretKey || process.env.FREEPAY_SECRET_KEY;
@@ -62,7 +74,7 @@ function validateFreepayPayload(payload) {
   if (!payload.customer?.name) throw new Error("Nome do cliente é obrigatório.");
   if (!payload.customer?.email) throw new Error("E-mail do cliente é obrigatório.");
   if (!payload.customer?.document?.number) throw new Error("CPF do cliente é obrigatório.");
-  if (!payload.customer?.phone?.area_code || !payload.customer?.phone?.number) throw new Error("Telefone do cliente é obrigatório.");
+  if (!payload.customer?.phone && !payload.customer?.Phone) throw new Error("Telefone do cliente é obrigatório.");
   if (!payload.items?.length) throw new Error("Pedido sem itens.");
 
   if (payload.payment_method === "pix" && !payload.pix?.expires_in_days) {
@@ -119,7 +131,7 @@ module.exports = async function handler(req, res) {
     const providerName = gatewayMasking?.providerName || gateway.providerName || "Elly Perfumaria";
     const customer = body.customer || {};
     const address = body.address || {};
-    const customerPhone = phonePayload(customer.phone);
+    const customerPhone = phoneVariants(customer.phone);
     if (!customerPhone) return send(res, 400, { error: "Informe um telefone válido com DDD." });
     const itemRef = (index, fallback) => gatewayMasking?.maskItemRefs === false ? fallback : `ITEM-${index}`;
 
@@ -187,7 +199,8 @@ module.exports = async function handler(req, res) {
         name: customer.name,
         email: customer.noEmail ? `${publicId.toLowerCase()}@cliente.local` : customer.email,
         document: { number: digits(customer.cpf), type: "cpf" },
-        phone: customerPhone,
+        phone: customerPhone.digits,
+        Phone: customerPhone.pascal,
       },
       shipping: {
         fee: shippingFee,
