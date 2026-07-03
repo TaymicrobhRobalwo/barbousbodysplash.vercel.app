@@ -329,12 +329,15 @@ async function lookupCep(rawCep) {
       return;
     }
 
-    const states = { MG: "Minas Gerais", SP: "São Paulo", RJ: "Rio de Janeiro", BA: "Bahia", PR: "Paraná", SC: "Santa Catarina", RS: "Rio Grande do Sul" };
-
-    $("#street").value = data.logradouro || "";
-    $("#neighborhood").value = data.bairro || "";
-    $("#city").value = data.localidade || "";
-    if (states[data.uf]) $("#state").value = states[data.uf];
+    const states = {
+      AC: "Acre", AL: "Alagoas", AP: "Amapá", AM: "Amazonas", BA: "Bahia",
+      CE: "Ceará", DF: "Distrito Federal", ES: "Espírito Santo", GO: "Goiás",
+      MA: "Maranhão", MT: "Mato Grosso", MS: "Mato Grosso do Sul", MG: "Minas Gerais",
+      PA: "Pará", PB: "Paraíba", PR: "Paraná", PE: "Pernambuco", PI: "Piauí",
+      RJ: "Rio de Janeiro", RN: "Rio Grande do Norte", RS: "Rio Grande do Sul",
+      RO: "Rondônia", RR: "Roraima", SC: "Santa Catarina", SP: "São Paulo",
+      SE: "Sergipe", TO: "Tocantins",
+    };
 
     [$("#street"), $("#neighborhood"), $("#city")].forEach((el) => el.removeAttribute("readonly"));
 
