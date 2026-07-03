@@ -104,24 +104,30 @@
     </section>
 
     <section id="addressScreen" class="screen form-screen">
-      <header class="form-top"><button class="back" data-back="customerScreen" type="button">‹</button><b>Preencha seus dados</b></header>
+      <header class="form-top"><button class="back" data-back="customerScreen" type="button">‹</button><b>Endereço de entrega</b></header>
       <form id="addressForm" class="form-card">
-        <p class="other">Outra pessoa irá receber o pedido? <a href="#">Clique aqui</a></p>
-        <label>CEP<input name="cep" id="cep" inputmode="numeric" placeholder="12345-000" required></label>
-        <label>Endereço<input name="street" id="street" placeholder="Alameda das Paineiras" required></label>
-        <div class="grid2 number-grid">
-          <label>Número<input name="number" placeholder="123" required></label>
-          <label>Bairro<input name="neighborhood" id="neighborhood" placeholder="Cidade Jardim" required></label>
+        <div id="cepStep">
+          <label>CEP<input name="cep" id="cep" inputmode="numeric" placeholder="12345-000" maxlength="9" required></label>
+          <small id="cepHelp">Digite seu CEP para buscar automaticamente o endereço.</small>
+          <small id="cepStatus" class="cep-status"></small>
         </div>
-        <label class="checkline"><input name="noNumber" type="checkbox"> S/N</label>
-        <label>Complemento<input name="complement" placeholder="Apartamento e bloco"></label>
-        <label>Cidade<input name="city" id="city" placeholder="Lagoa da Prata" required></label>
-        <label>Estado<select name="state" id="state" required><option>Minas Gerais</option><option>São Paulo</option><option>Rio de Janeiro</option><option>Bahia</option><option>Paraná</option><option>Santa Catarina</option><option>Rio Grande do Sul</option></select></label>
-        <label>País<select name="country"><option>Brasil</option></select></label>
-        <p class="shipping-title">Escolha o melhor frete para você</p>
-        <label class="shipping"><span></span><b>Frete Grátis<small>2 a 5 dias úteis</small></b><strong>Grátis</strong></label>
-        <small class="forecast">A previsão de entrega pode variar de acordo com a região e facilidade de acesso ao seu endereço</small>
-        <button class="primary" type="submit">Ir para o pagamento</button>
+        <div id="addressDetails" class="hidden">
+          <p class="other">Outra pessoa irá receber o pedido? <a href="#">Clique aqui</a></p>
+          <label>Endereço<input name="street" id="street" placeholder="Alameda das Paineiras" readonly required></label>
+          <div class="grid2 number-grid">
+            <label>Número<input name="number" placeholder="123" required></label>
+            <label>Bairro<input name="neighborhood" id="neighborhood" placeholder="Cidade Jardim" readonly required></label>
+          </div>
+          <label class="checkline"><input name="noNumber" type="checkbox"> S/N</label>
+          <label>Complemento<input name="complement" placeholder="Apartamento e bloco"></label>
+          <label>Cidade<input name="city" id="city" placeholder="Lagoa da Prata" readonly required></label>
+          <label>Estado<select name="state" id="state" required><option value="">Selecione</option><option>Minas Gerais</option><option>São Paulo</option><option>Rio de Janeiro</option><option>Bahia</option><option>Paraná</option><option>Santa Catarina</option><option>Rio Grande do Sul</option></select></label>
+          <label>País<select name="country"><option>Brasil</option></select></label>
+          <p class="shipping-title">Frete</p>
+          <label class="shipping"><span></span><b>Frete Grátis<small>2 a 5 dias úteis</small></b><strong>Grátis</strong></label>
+          <small class="forecast">A previsão de entrega pode variar de acordo com a região e facilidade de acesso ao seu endereço</small>
+          <button class="primary" type="submit">Ir para o pagamento</button>
+        </div>
       </form>
     </section>
 

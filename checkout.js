@@ -306,18 +306,58 @@ $("#cpf").addEventListener("input", (event) => {
   event.target.value = formatCpf(event.target.value);
 });
 
-$("#cep").addEventListener("blur", async (event) => {
-  const cep = digits(event.target.value);
-  if (cep.length !== 8) return;
+function formatCep(value) {
+  const d = digits(value).slice(0, 8);
+  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+}
+
+async function lookupCep(rawCep) {
+  const status = $("#cepStatus");
+  const cepDigits = digits(rawCep);
+  if (cepDigits.length !== 8) return;
+
+  status.className = "cep-status loading";
+  status.textContent = "Buscando CEP...";
+
   try {
-    const data = await fetch(`https://viacep.com.br/ws/${cep}/json/`).then((res) => res.json());
-    if (data.erro) return;
+    const response = await fetch(`https://viacep.com.br/ws/${cepDigits}/json/`);
+    const data = await response.json();
+
+    if (data.erro) {
+      status.className = "cep-status error";
+      status.textContent = "CEP não encontrado. Verifique e tente novamente.";
+      return;
+    }
+
+    const states = { MG: "Minas Gerais", SP: "São Paulo", RJ: "Rio de Janeiro", BA: "Bahia", PR: "Paraná", SC: "Santa Catarina", RS: "Rio Grande do Sul" };
+
     $("#street").value = data.logradouro || "";
     $("#neighborhood").value = data.bairro || "";
     $("#city").value = data.localidade || "";
-    const states = { MG: "Minas Gerais", SP: "São Paulo", RJ: "Rio de Janeiro", BA: "Bahia", PR: "Paraná", SC: "Santa Catarina", RS: "Rio Grande do Sul" };
     if (states[data.uf]) $("#state").value = states[data.uf];
-  } catch (_) {}
+
+    [$("#street"), $("#neighborhood"), $("#city")].forEach((el) => el.removeAttribute("readonly"));
+
+    status.className = "cep-status success";
+    status.textContent = "Endereço encontrado!";
+    $("#cepHelp").classList.add("hidden");
+    $("#addressDetails").classList.remove("hidden");
+
+    setTimeout(() => $("#number")?.focus(), 150);
+  } catch (_) {
+    status.className = "cep-status error";
+    status.textContent = "Erro ao buscar CEP. Tente novamente.";
+  }
+}
+
+$("#cep").addEventListener("input", (event) => {
+  event.target.value = formatCep(event.target.value);
+  const cepDigits = digits(event.target.value);
+  if (cepDigits.length === 8) lookupCep(cepDigits);
+  else {
+    $("#cepStatus").className = "cep-status";
+    $("#cepStatus").textContent = "";
+  }
 });
 
 init();
