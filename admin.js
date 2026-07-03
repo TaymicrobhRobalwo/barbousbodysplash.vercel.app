@@ -243,6 +243,7 @@ function brandingForm(v = {}) {
 
 function field(label, key, value = "", type = "text") {
   if (key === "token") return "";
+  if (key === "postbackUrl") return "";
   return `<label class="field">${label}<input data-key="${key}" type="${type}" value="${esc(value)}"></label>`;
 }
 
@@ -505,6 +506,7 @@ async function renderGateway(active = "gateways") {
   bindDirty();
   $("#saveGatewayAll").onclick = (event) => saveGatewaySettings(active, event.currentTarget);
   if (active === "gateways") {
+    $$(".flat-card").forEach((card) => { if (card.textContent.includes("Freepay") && card.querySelector("small")) card.querySelector("small").textContent = `${location.origin}/api/freepay`; });
     $("#testGateway").onclick = () => testAction("gateway", "Teste de conexão Freepay");
     $("#testPix").onclick = () => testAction("gateway", "Pix de teste solicitado");
   }
@@ -513,6 +515,7 @@ async function renderGateway(active = "gateways") {
 }
 
 function gatewaySettingsView(gateway = {}) {
+  const systemWebhook = `${location.origin}/api/freepay`;
   return `<section class="grid grid-3"><div class="card"><span class="status-dot"></span> <b>Freepay</b><p>Gateway ativo para Pix e cartão.</p><span class="badge green">Ativo</span></div><div class="card"><span class="status-dot off"></span> <b>Buckpay</b><p>Preparado para integração futura.</p><span class="badge gray">Inativo</span></div><div class="card"><span class="status-dot off"></span> <b>Personalizado</b><p>Gateway customizado futuro.</p><span class="badge gray">Inativo</span></div></section><section class="grid grid-2" style="margin-top:18px"><div class="card"><h2>Credenciais Freepay</h2><div class="form-grid one">${field("Public Key","publicKey",gateway.publicKey)}${field("Secret Key","secretKey",gateway.secretKey,"password")}${field("Webhook URL","postbackUrl",gateway.postbackUrl)}${selectField("Ambiente","environment",gateway.environment || "production",["production","sandbox"])}${field("Pix expira em dias","pixExpiresInDays",gateway.pixExpiresInDays || 1,"number")}</div><div class="header-actions" style="margin-top:14px"><button class="secondary-action" id="testGateway">Testar conexão</button><button class="secondary-action" id="testPix">Gerar Pix de teste</button></div></div><div class="card"><h2>Webhooks em uso</h2><p>URL efetivamente enviada ao gateway ao criar a transação.</p><div class="flat-card"><b>Freepay</b><br><small>${esc(gateway.postbackUrl || "https://6a4437ee-6a2c-83e9-4571-7d0fa732u9e.vercel.app/api/freepay")}</small></div></div></section>`;
 }
 
@@ -546,7 +549,7 @@ function bindGatewayMasking() {
 async function saveGatewaySettings(active, button) {
   const form = collectForm();
   if (active === "gateways") {
-    return saveSettings({ gateway: { ...state.settings.gateway, publicKey: form.publicKey, secretKey: form.secretKey, postbackUrl: form.postbackUrl, environment: form.environment, pixExpiresInDays: form.pixExpiresInDays } }, button);
+    return saveSettings({ gateway: { ...state.settings.gateway, publicKey: form.publicKey, secretKey: form.secretKey, postbackUrl: "", environment: form.environment, pixExpiresInDays: form.pixExpiresInDays } }, button);
   }
   if (active === "masking") {
     const names = [...new Set(parseNames())];

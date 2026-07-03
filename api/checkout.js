@@ -14,6 +14,13 @@ function getClientIp(req) {
   return String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "").split(",")[0].trim();
 }
 
+function getSystemWebhookUrl(req) {
+  const host = req.headers["x-forwarded-host"] || req.headers.host;
+  const proto = req.headers["x-forwarded-proto"] || "https";
+  if (!host) return "https://barbousbodysplash-promo.vercel.app/api/freepay";
+  return `${proto}://${host}/api/freepay`;
+}
+
 async function callFreepay(payload, gateway) {
   const publicKey = gateway.publicKey || process.env.FREEPAY_PUBLIC_KEY;
   const secretKey = gateway.secretKey || process.env.FREEPAY_SECRET_KEY;
@@ -29,8 +36,14 @@ async function callFreepay(payload, gateway) {
   });
 
   const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!response.ok) throw new Error(data?.message || data?.error || `Freepay error ${response.status}`);
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (_) { data = text; }
+  if (!response.ok) {
+    const details = typeof data === "string"
+      ? data
+      : data?.message || data?.error || data?.errors || data?.detail || data?.details;
+    throw new Error(details ? `Freepay ${response.status}: ${typeof details === "string" ? details : JSON.stringify(details)}` : `Freepay error ${response.status}`);
+  }
   return data;
 }
 
@@ -144,10 +157,12 @@ module.exports = async function handler(req, res) {
       localItems.push({ ...feeItem, real_title: feeItem.title, sent_title: feeItem.title });
     }
     const amount = subtotal + shippingFee + installmentFee;
+    const gatewayItems = items.map(({ external_ref, ...item }) => item);
 
     const metadata = {
       provider_name: providerName,
       external_order_id: externalOrderId,
+      item_refs: items.map((item) => item.external_ref),
     };
     if (gatewayMasking?.sendUtmsToGateway === true) metadata.utms = body.utms || {};
     else if (gatewayMasking?.defaultUtm) metadata.utm_source = gatewayMasking.defaultUtm;
@@ -155,9 +170,7 @@ module.exports = async function handler(req, res) {
     const gatewayPayload = {
       amount,
       payment_method: paymentMethod,
-      external_id: externalOrderId,
-      external_ref: externalOrderId,
-      postback_url: gateway.postbackUrl || "https://6a4437ee-6a2c-83e9-4571-7d0fa732u9e.vercel.app/api/freepay",
+      postback_url: getSystemWebhookUrl(req),
       customer: {
         name: customer.name,
         email: customer.noEmail ? `${publicId.toLowerCase()}@cliente.local` : customer.email,
@@ -177,7 +190,7 @@ module.exports = async function handler(req, res) {
           country: "BR",
         },
       },
-      items,
+      items: gatewayItems,
       metadata: JSON.stringify(metadata),
       ip: getClientIp(req),
     };
@@ -198,7 +211,27 @@ module.exports = async function handler(req, res) {
 
     validateFreepayPayload(gatewayPayload);
 
-    const gatewayResponse = await callFreepay(gatewayPayload, gateway);
+    let gatewayResponse;
+    try {
+      gatewayResponse = await callFreepay(gatewayPayload, gateway);
+    } catch (error) {
+      try {
+        await supabase("checkout_logs", {
+          method: "POST",
+          body: JSON.stringify({
+            type: "gateway",
+            level: "error",
+            source: "freepay",
+            order_public_id: publicId,
+            message: "Erro ao criar transação Freepay",
+            payload: sanitizeGatewayData({ ...gatewayPayload, card: undefined }),
+            response: { error: error.message },
+            status_code: 400,
+          }),
+        });
+      } catch (_) {}
+      throw error;
+    }
     const safeGatewayResponse = sanitizeGatewayData(gatewayResponse);
     const pix = pickPix(gatewayResponse);
 

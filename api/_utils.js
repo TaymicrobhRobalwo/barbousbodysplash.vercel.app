@@ -14,7 +14,7 @@ const defaults = {
   },
   gateway: {
     providerName: "Elly Perfumaria",
-    postbackUrl: "https://6a4437ee-6a2c-83e9-4571-7d0fa732u9e.vercel.app/api/freepay",
+    postbackUrl: "",
     pixExpiresInDays: 1,
   },
   gateway_masking: {
