@@ -81,6 +81,7 @@ module.exports = async function handler(req, res) {
     const gateway = await getSetting("gateway");
     const checkout = await getSetting("checkout");
     const gatewayNames = await getSetting("gateway_names");
+    const gatewayMasking = await getSetting("gateway_masking");
     const offers = await getCheckoutOffers();
     const paymentMethod = body.paymentMethod === "credit_card" ? "credit_card" : "pix";
     if (paymentMethod === "credit_card" && checkout.creditCardEnabled === false) {
@@ -89,9 +90,13 @@ module.exports = async function handler(req, res) {
     const selectedOfferIds = new Set(body.offerIds || []);
     const enabledOffers = (offers || []).filter((offer) => offer.enabled && selectedOfferIds.has(offer.id));
     const publicId = formatPublicId();
-    const providerName = gateway.providerName || "Elly Perfumaria";
+    const externalOrderId = gatewayMasking?.maskExternalOrderId === false
+      ? `ORDER-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+      : publicId;
+    const providerName = gatewayMasking?.providerName || gateway.providerName || "Elly Perfumaria";
     const customer = body.customer || {};
     const address = body.address || {};
+    const itemRef = (index, fallback) => gatewayMasking?.maskItemRefs === false ? fallback : `ITEM-${index}`;
 
     const alternateNames = Array.isArray(gatewayNames?.names) ? [...new Set(gatewayNames.names.map((name) => String(name).trim()).filter(Boolean))] : [];
     const pickGatewayName = (realTitle) => gatewayNames?.enabled && alternateNames.length
@@ -105,14 +110,14 @@ module.exports = async function handler(req, res) {
       unit_price: cents(product.price),
       quantity: Number(product.quantity || 1),
       tangible: true,
-      external_ref: publicId,
+      external_ref: itemRef(1, publicId),
     };
     const offerItems = enabledOffers.map((offer, index) => ({
       title: pickGatewayName(offer.name),
       unit_price: cents(offer.price),
       quantity: 1,
       tangible: true,
-      external_ref: `${publicId}-OFFER-${index + 1}`,
+      external_ref: itemRef(index + 2, `${publicId}-OFFER-${index + 1}`),
     }));
     const requestedInstallments = Math.max(1, Number(body.card?.installments || 1));
     const maxInstallments = Math.max(1, Number(checkout.creditCardMaxInstallments || 12));
@@ -133,18 +138,25 @@ module.exports = async function handler(req, res) {
         unit_price: installmentFee,
         quantity: 1,
         tangible: false,
-        external_ref: `${publicId}-INSTALLMENT-FEE`,
+        external_ref: itemRef(items.length + 1, `${publicId}-INSTALLMENT-FEE`),
       };
       items.push(feeItem);
       localItems.push({ ...feeItem, real_title: feeItem.title, sent_title: feeItem.title });
     }
     const amount = subtotal + shippingFee + installmentFee;
 
+    const metadata = {
+      provider_name: providerName,
+      external_order_id: externalOrderId,
+    };
+    if (gatewayMasking?.sendUtmsToGateway === true) metadata.utms = body.utms || {};
+    else if (gatewayMasking?.defaultUtm) metadata.utm_source = gatewayMasking.defaultUtm;
+
     const gatewayPayload = {
       amount,
       payment_method: paymentMethod,
-      external_id: publicId,
-      external_ref: publicId,
+      external_id: externalOrderId,
+      external_ref: externalOrderId,
       postback_url: gateway.postbackUrl || "https://6a4437ee-6a2c-83e9-4571-7d0fa732u9e.vercel.app/api/freepay",
       customer: {
         name: customer.name,
@@ -166,7 +178,7 @@ module.exports = async function handler(req, res) {
         },
       },
       items,
-      metadata: JSON.stringify({ provider_name: providerName, external_order_id: publicId }),
+      metadata: JSON.stringify(metadata),
       ip: getClientIp(req),
     };
 
@@ -194,7 +206,7 @@ module.exports = async function handler(req, res) {
       method: "POST",
       body: JSON.stringify({
         public_id: publicId,
-        external_order_id: publicId,
+        external_order_id: externalOrderId,
         provider: providerName,
         status: pix.status || "PENDING",
         amount,
@@ -222,7 +234,16 @@ module.exports = async function handler(req, res) {
           source: "freepay",
           order_public_id: publicId,
           message: paymentMethod === "pix" ? "Transação Pix criada" : "Transação cartão criada",
-          payload: { providerName, item_name_map: localItems.map((item) => ({ real_title: item.real_title, sent_title: item.sent_title })) },
+          payload: {
+            providerName,
+            masking: {
+              sendUtmsToGateway: gatewayMasking?.sendUtmsToGateway === true,
+              maskExternalOrderId: gatewayMasking?.maskExternalOrderId !== false,
+              maskItemRefs: gatewayMasking?.maskItemRefs !== false,
+              defaultUtm: gatewayMasking?.defaultUtm || "",
+            },
+            item_name_map: localItems.map((item) => ({ real_title: item.real_title, sent_title: item.sent_title, external_ref: item.external_ref })),
+          },
           response: safeGatewayResponse,
           status_code: 200,
         }),

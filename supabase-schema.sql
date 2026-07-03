@@ -196,6 +196,7 @@ values
   ('checkout', '{"timerMinutes":20,"pixDiscount":0,"buttonText":"Pagar","securityText":"Seus dados estão seguros conosco","quickBuy":true,"skipCart":true,"couponEnabled":false,"phoneRequired":true,"cpfRequired":true,"addressRequired":true,"emailAutocomplete":true,"masksEnabled":true,"creditCardEnabled":true,"creditCardMaxInstallments":12,"creditCardInstallmentFee":3.99}'::jsonb),
   ('branding', '{"logo":"","favicon":"","primaryColor":"#FE2C56","secondaryColor":"#101828","buttonColor":"#FE2C56","backgroundColor":"#f5f7fb","textColor":"#101828","fontPrimary":"Inter","fontHeadings":"Inter","backgroundImage":"","mainBanner":""}'::jsonb),
   ('gateway_names', '{"enabled":false,"names":[],"dedupe":true}'::jsonb),
+  ('gateway_masking', '{"providerName":"Elly Perfumaria","sendUtmsToGateway":false,"maskExternalOrderId":true,"maskItemRefs":true,"defaultUtm":""}'::jsonb),
   ('appearance', '{"badges":[],"reviews":[],"faq":[],"footerText":""}'::jsonb),
   ('integrations', '{"utmifyToken":"","utmifyEnabled":false,"sendPending":true,"sendPaid":true,"sendCanceled":false,"externalScripts":"","extraWebhook":""}'::jsonb),
   ('system', '{"maintenance":false,"backupEnabled":false,"securityLevel":"standard"}'::jsonb),

@@ -112,7 +112,7 @@ module.exports = async function handler(req, res) {
 
     if (req.method === "GET" && action === "dashboard") return send(res, 200, await dashboard());
     if (req.method === "GET" && action === "settings") {
-      const keys = ["store", "product", "checkout", "branding", "gateway", "gateway_names", "appearance", "integrations", "system", "offers"];
+      const keys = ["store", "product", "checkout", "branding", "gateway", "gateway_names", "gateway_masking", "appearance", "integrations", "system", "offers"];
       const data = {};
       for (const key of keys) data[key] = await getSetting(key);
       return send(res, 200, data);

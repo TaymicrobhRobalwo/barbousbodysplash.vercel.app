@@ -1,6 +1,6 @@
 const state = {
   token: localStorage.getItem("admin_token") || "",
-  view: localStorage.getItem("admin_view") || "dashboard",
+  view: localStorage.getItem("admin_view") === "products" ? "store" : (localStorage.getItem("admin_view") || "dashboard"),
   settings: {},
   dashboard: null,
   cache: {},
@@ -10,11 +10,10 @@ const state = {
 
 const menus = [
   ["dashboard", "Dashboard", "◈", "Visão geral da operação"],
-  ["store", "Configurações da Loja", "⚙", "Loja, produto, checkout e branding"],
-  ["products", "Produtos", "□", "Catálogo e variações"],
+  ["store", "Página / Checkout", "⚙", "Oferta principal, formulário e pagamento"],
   ["offers", "Ofertas", "✦", "Order bumps, upsells e kits"],
   ["orders", "Pedidos", "▤", "Gestão de pedidos"],
-  ["gateway", "Gateway Pix", "◆", "Freepay e gateways futuros"],
+  ["gateway", "Gateways", "◆", "Freepay, mascaramento e logs"],
   ["integrations", "Integrações", "↗", "Pixels, UTMify, webhooks e scripts"],
   ["logistics", "Logística", "▣", "Envios e rastreios"],
   ["customers", "Clientes", "◉", "Compradores e histórico"],
@@ -113,7 +112,7 @@ function skeleton() {
 
 async function renderView(view) {
   skeleton();
-  const routes = { dashboard: renderDashboard, store: renderStore, products: renderProducts, offers: renderOffers, orders: renderOrders, gateway: renderGateway, integrations: renderIntegrations, logistics: renderLogistics, customers: renderCustomers, reports: renderReports, appearance: renderAppearance, users: renderUsers, system: renderSystem };
+  const routes = { dashboard: renderDashboard, store: renderStore, offers: renderOffers, orders: renderOrders, gateway: renderGateway, integrations: renderIntegrations, logistics: renderLogistics, customers: renderCustomers, reports: renderReports, appearance: renderAppearance, users: renderUsers, system: renderSystem };
   await (routes[view] || renderDashboard)();
 }
 
@@ -192,34 +191,50 @@ function tabs(tabs, active, body) {
   return `<div class="tabs">${tabs.map(([id, label]) => `<button class="tab-btn ${id === active ? "active" : ""}" data-tab="${id}">${label}</button>`).join("")}</div><div>${body}</div>`;
 }
 
-async function renderStore(active = "general") {
-  header("Configurações da Loja", "Controle loja, produto principal, checkout e branding em uma área organizada.", `<button class="primary-action" id="saveStore">Salvar alterações</button>`);
+async function renderStore(active = "offer") {
+  header("Página / Checkout", "Controle a oferta principal e a experiência de pagamento desta página única.", `<button class="primary-action" id="saveStore">Salvar alterações</button>`);
   await refreshSettings();
   const s = state.settings;
   const tabBody = {
-    general: generalForm(s.store),
-    product: productMainForm(s.product),
+    offer: productMainForm(s.product),
     checkout: checkoutForm(s.checkout),
+    form: formRulesForm(s.checkout),
+    payment: paymentForm(s.checkout),
+    trust: trustForm(s.checkout, s.store),
+    advanced: advancedPageForm(s.store, s.product),
     branding: brandingForm(s.branding),
   }[active];
-  $("#viewRoot").innerHTML = `<section class="card">${tabs([["general","Geral"],["product","Produto Principal"],["checkout","Checkout"],["branding","Branding"]], active, tabBody)}</section>`;
+  $("#viewRoot").innerHTML = `<section class="card">${tabs([["offer","Oferta Principal"],["checkout","Checkout"],["form","Formulário"],["payment","Pagamento"],["trust","Textos e Confiança"],["branding","Aparência"],["advanced","Avançado"]], active, tabBody)}</section>`;
   bindTabs((id) => renderStore(id));
   bindDirty();
   $("#saveStore").onclick = (event) => saveStore(active, event.currentTarget);
   bindPreview();
 }
 
-function generalForm(v = {}) {
-  return `<div class="form-grid">${field("Nome da loja","storeName",v.storeName)}${field("Domínio principal","domain",v.domain)}${field("WhatsApp da loja","whatsapp",v.whatsapp)}${field("E-mail de suporte","supportEmail",v.supportEmail)}${field("Cidade padrão","defaultCity",v.defaultCity)}${field("Estado padrão","defaultState",v.defaultState)}${selectField("Status da loja","status",v.status,["active","inactive"])}${field("Moeda","currency",v.currency)}${field("Fuso horário","timezone",v.timezone)}${areaField("Mensagem de loja fechada","closedMessage",v.closedMessage)}</div>`;
-}
-
 function productMainForm(v = {}) {
-  return `<div class="form-grid">${field("Nome do produto","productName",v.productName)}${field("Descrição curta","shortDescription",v.shortDescription)}${field("Preço em centavos","price",v.price,"number")}${field("Preço comparativo","compareAtPrice",v.compareAtPrice,"number")}${field("Imagem principal","image",v.image)}${field("Galeria de imagens (uma por linha)","gallery",Array.isArray(v.gallery)?v.gallery.join("\n"):"")}${field("Estoque","stock",v.stock,"number")}${field("SKU","sku",v.sku)}${field("Categoria","category",v.category)}${selectField("Status","status",v.status || "active",["active","inactive"])}</div><div style="margin-top:16px">${areaField("Descrição completa / HTML","description",v.description || "",10)}</div>`;
+  return `<div class="grid grid-2"><div><div class="form-grid">${field("Nome da oferta principal","productName",v.productName)}${field("Descrição curta","shortDescription",v.shortDescription)}${field("Preço em centavos","price",v.price,"number")}${field("Preço riscado em centavos","compareAtPrice",v.compareAtPrice,"number")}${field("Imagem principal","image",v.image)}${field("Galeria simples (uma imagem por linha)","gallery",Array.isArray(v.gallery)?v.gallery.join("\n"):"")}${field("Quantidade do kit","quantity",v.quantity || 1,"number")}${selectField("Status da oferta","status",v.status || "active",["active","inactive"])}</div><div style="margin-top:16px">${areaField("Descrição completa / HTML","description",v.description || "",8)}</div></div><div class="preview-box"><h3>Preview do resumo</h3><div class="preview-checkout"><header>${esc(v.storeName || state.settings.store?.storeName || "Oferta")}</header><div><img src="${esc(v.image || "IMG_2103.jpg")}" style="width:86px;height:86px;border-radius:16px;object-fit:cover;margin-bottom:12px"><b>${esc(v.productName || "Oferta principal")}</b><p>${esc(v.shortDescription || "Produto principal vendido nesta página.")}</p><strong>${money(v.price || 0)}</strong><button type="button">Ir para pagamento</button></div></div></div></div>`;
 }
 
 function checkoutForm(v = {}) {
-  const toggles = [["Compra rápida","quickBuy"],["Pular carrinho","skipCart"],["Campo de cupom","couponEnabled"],["Telefone obrigatório","phoneRequired"],["CPF obrigatório","cpfRequired"],["Endereço obrigatório","addressRequired"],["Autocomplete de e-mail","emailAutocomplete"],["Máscaras telefone/CPF/CEP","masksEnabled"],["Pagamento por cartão de crédito","creditCardEnabled"]];
-  return `<div class="form-grid">${field("Timer em minutos","timerMinutes",v.timerMinutes,"number")}${field("Desconto no Pix (%)","pixDiscount",v.pixDiscount,"number")}${field("Texto do botão principal","buttonText",v.buttonText)}${field("Texto de segurança","securityText",v.securityText)}${field("Máximo de parcelas no cartão","creditCardMaxInstallments",v.creditCardMaxInstallments || 12,"number")}${field("Taxa de parcelamento cartão (%)","creditCardInstallmentFee",v.creditCardInstallmentFee || 3.99,"number")}</div><div class="flat-card" style="margin-top:18px">${toggles.map(([label,key]) => switchRow(label,key,key === "creditCardEnabled" ? v[key] !== false : v[key])).join("")}</div>`;
+  const toggles = [["Compra rápida","quickBuy"],["Pular carrinho","skipCart"],["Campo de cupom","couponEnabled"]];
+  return `<div class="form-grid">${field("Timer em minutos","timerMinutes",v.timerMinutes,"number")}${field("Texto do botão principal","buttonText",v.buttonText)}${field("Desconto no Pix (%)","pixDiscount",v.pixDiscount,"number")}</div><div class="flat-card" style="margin-top:18px">${toggles.map(([label,key]) => switchRow(label,key,v[key])).join("")}</div>`;
+}
+
+function formRulesForm(v = {}) {
+  const toggles = [["Telefone obrigatório","phoneRequired"],["CPF obrigatório","cpfRequired"],["Endereço obrigatório","addressRequired"],["Autocomplete de e-mail","emailAutocomplete"],["Máscaras telefone/CPF/CEP","masksEnabled"]];
+  return `<div class="flat-card">${toggles.map(([label,key]) => switchRow(label,key,v[key])).join("")}</div>`;
+}
+
+function paymentForm(v = {}) {
+  return `<div class="form-grid">${field("Máximo de parcelas no cartão","creditCardMaxInstallments",v.creditCardMaxInstallments || 12,"number")}${field("Taxa de parcelamento cartão (%)","creditCardInstallmentFee",v.creditCardInstallmentFee || 3.99,"number")}</div><div class="flat-card" style="margin-top:18px">${switchRow("Pagamento por cartão de crédito","creditCardEnabled",v.creditCardEnabled !== false)}</div>`;
+}
+
+function trustForm(checkout = {}, store = {}) {
+  return `<div class="form-grid">${field("Texto de segurança","securityText",checkout.securityText)}${field("Nome exibido da página","storeName",store.storeName)}${field("WhatsApp de suporte","whatsapp",store.whatsapp)}${field("E-mail de suporte","supportEmail",store.supportEmail)}${areaField("Mensagem quando a página estiver inativa","closedMessage",store.closedMessage,5)}</div>`;
+}
+
+function advancedPageForm(store = {}, product = {}) {
+  return `<div class="form-grid">${field("Domínio principal","domain",store.domain)}${field("Cidade padrão","defaultCity",store.defaultCity)}${field("Estado padrão","defaultState",store.defaultState)}${selectField("Status da página","status",store.status || "active",["active","inactive"])}${field("Moeda","currency",store.currency)}${field("Fuso horário","timezone",store.timezone)}${field("SKU interno (opcional)","sku",product.sku)}${field("Estoque interno (opcional)","stock",product.stock,"number")}</div>`;
 }
 
 function brandingForm(v = {}) {
@@ -265,12 +280,13 @@ function collectForm() {
 
 async function saveStore(active, button) {
   const form = collectForm();
-  if (active === "general") return saveSettings({ store: form }, button);
-  if (active === "product") {
+  if (active === "offer") {
     form.gallery = String(form.gallery || "").split(/\n+/).map((x) => x.trim()).filter(Boolean);
     return saveSettings({ product: { ...state.settings.product, ...form } }, button);
   }
-  if (active === "checkout") return saveSettings({ checkout: form }, button);
+  if (["checkout", "form", "payment"].includes(active)) return saveSettings({ checkout: { ...state.settings.checkout, ...form } }, button);
+  if (active === "trust") return saveSettings({ checkout: { ...state.settings.checkout, securityText: form.securityText }, store: { ...state.settings.store, storeName: form.storeName, whatsapp: form.whatsapp, supportEmail: form.supportEmail, closedMessage: form.closedMessage } }, button);
+  if (active === "advanced") return saveSettings({ store: { ...state.settings.store, domain: form.domain, defaultCity: form.defaultCity, defaultState: form.defaultState, status: form.status, currency: form.currency, timezone: form.timezone }, product: { ...state.settings.product, sku: form.sku, stock: form.stock } }, button);
   if (active === "branding") return saveSettings({ branding: form }, button);
 }
 
@@ -297,15 +313,6 @@ async function remove(resource, id) {
   return true;
 }
 
-async function renderProducts() {
-  header("Produtos", "Cadastre, edite, duplique e organize produtos, variações, estoque e SEO.", `<button class="primary-action" id="newProduct">Novo produto</button>`);
-  const rows = await list("products");
-  $("#viewRoot").innerHTML = resourceTable({ rows, resource: "products", empty: "Nenhum produto cadastrado", columns: [["Produto", r => productCell(r)], ["Preço", r => money(r.price)], ["Estoque", r => r.stock ?? 0], ["SKU", r => esc(r.sku || "-")], ["Status", r => badge(r.status)], ["Atualizado", r => fmtDate(r.updated_at)]] });
-  bindResourceActions("products", productModal, () => renderProducts());
-  $("#newProduct").onclick = () => productModal({ status: "active", price: 0, compare_at_price: 0, stock: 0 });
-}
-
-function productCell(r) { return `<div style="display:flex;align-items:center;gap:10px"><img src="${esc(r.image || "IMG_2103.jpg")}" style="width:42px;height:42px;border-radius:10px;object-fit:cover"><div><b>${esc(r.name)}</b><br><small>${esc(r.category || "Sem categoria")}</small></div></div>`; }
 function badge(status) { return `<span class="badge ${badgeColor(status)}">${esc(status || "-")}</span>`; }
 
 function resourceTable({ rows, resource, empty, columns }) {
@@ -325,17 +332,12 @@ function openModal(title, body, footer = "") {
 }
 function closeModal() { $("#modalRoot").classList.add("hidden"); $("#modalRoot").innerHTML = ""; }
 
-function productModal(row = {}) {
-  openModal(row.id ? "Editar produto" : "Novo produto", `<div class="tabs"><button class="tab-btn active">Informações</button><button class="tab-btn">Preços</button><button class="tab-btn">Mídia</button><button class="tab-btn">Variações</button><button class="tab-btn">Estoque</button><button class="tab-btn">SEO</button><button class="tab-btn">Ofertas relacionadas</button><button class="tab-btn">Avançado</button></div><div class="form-grid">${field("Nome","name",row.name)}${field("SKU","sku",row.sku)}${field("Preço","price",row.price,"number")}${field("Preço comparativo","compare_at_price",row.compare_at_price,"number")}${field("Imagem","image",row.image)}${field("Estoque","stock",row.stock,"number")}${field("Categoria","category",row.category)}${selectField("Status","status",row.status || "active",["active","inactive"])}</div>${areaField("Descrição curta","short_description",row.short_description)}${areaField("Descrição completa / HTML","description",row.description,8)}<div style="margin-top:18px"><button class="primary-action" id="saveModal">Salvar produto</button></div>`);
-  $("#saveModal").onclick = async () => { await upsert("products", { ...row, ...collectForm() }); closeModal(); renderProducts(); };
-}
-
 async function renderOffers() {
-  header("Ofertas / Order Bumps", "Crie e edite os order bumps exibidos no checkout: imagem, nome, preço, preço riscado, status, posição e regras.", `<button class="primary-action" id="newOffer">Novo order bump</button>`);
-  const rows = await list("offers_v2");
-  $("#viewRoot").innerHTML = `<section class="grid grid-4" style="margin-bottom:18px">${metric("Order bumps", rows.length, "cadastrados")}${metric("Ativos", rows.filter(r => r.status === "active").length, "aparecem no checkout")}${metric("Inativos", rows.filter(r => r.status !== "active").length, "ocultos")}${metric("Ticket adicional", money(rows.reduce((s,r)=>s+Number(r.price||0),0)), "soma das ofertas")}</section>` + resourceTable({ rows, resource: "offers_v2", empty: "Nenhum order bump cadastrado", columns: [["Order bump", r => `<div style="display:flex;align-items:center;gap:10px"><img src="${esc(r.image || "IMG_2112.PNG.png")}" style="width:46px;height:46px;border-radius:12px;object-fit:cover"><div><b>${esc(r.title)}</b><br><small>${esc(r.internal_name)}</small></div></div>`], ["Tipo", r => esc(r.type)], ["Onde aparece", r => esc(r.placement)], ["Preço", r => `${money(r.price)}<br><small><s>${money(r.compare_at_price)}</s></small>`], ["Status", r => badge(r.status)], ["Limite", r => r.max_quantity || 1]] });
+  header("Ofertas / Order Bumps", "Complementos exibidos no checkout desta página única.", `<button class="primary-action" id="newOffer">Novo order bump</button>`);
+  const rows = await getOfferRows();
+  $("#viewRoot").innerHTML = `<section class="grid grid-4" style="margin-bottom:18px">${metric("Order bumps", rows.length, "cadastrados")}${metric("Ativos", rows.filter(r => r.status === "active").length, "aparecem no checkout")}${metric("Inativos", rows.filter(r => r.status !== "active").length, "ocultos")}${metric("Ticket adicional", money(rows.reduce((s,r)=>s+Number(r.price||0),0)), "soma das ofertas")}</section>` + resourceTable({ rows, resource: "offers_v2", empty: "Nenhum order bump cadastrado", columns: [["Order bump", r => `<div style="display:flex;align-items:center;gap:10px">${offerThumb(r)}<div><b>${esc(r.title)}</b><br><small>${esc(r.internal_name || (r._legacy ? "Legado - salve para migrar" : "Complemento do checkout"))}</small></div></div>`], ["Origem", r => r._legacy ? `<span class="badge amber">legado</span>` : `<span class="badge green">tabela</span>`], ["Onde aparece", r => esc(r.placement)], ["Preço", r => `${money(r.price)}<br><small><s>${money(r.compare_at_price)}</s></small>`], ["Status", r => badge(r.status)], ["Limite", r => r.max_quantity || 1]] });
   bindResourceActions("offers_v2", offerModal, () => renderOffers());
-  $("#newOffer").onclick = () => offerModal({ status: "active", type: "order_bump", placement: "checkout", price: 1990, compare_at_price: 3990, max_quantity: 1 });
+  $("#newOffer").onclick = () => offerModal({ status: "active", type: "order_bump", placement: "checkout", price: 1990, compare_at_price: 3990, max_quantity: 1, image: "" });
 }
 
 function offerModal(row = {}) {
@@ -350,6 +352,108 @@ function offerModal(row = {}) {
     reader.readAsDataURL(file);
   };
   $("#saveModal").onclick = async () => { const data = collectForm(); data.display_condition = { type: data.condition_type }; delete data.condition_type; await upsert("offers_v2", { ...row, ...data }); closeModal(); renderOffers(); };
+}
+
+async function getOfferRows() {
+  await refreshSettings();
+  let tableRows = [];
+  try { tableRows = await list("offers_v2"); } catch (_) { tableRows = []; }
+  const seen = new Set(tableRows.map((row) => row.id || row.internal_name || row.title));
+  const legacyRows = (state.settings.offers || [])
+    .filter((offer) => !seen.has(offer.id))
+    .map((offer) => ({
+      id: `legacy-${offer.id || uid()}`,
+      _legacy: true,
+      legacy_id: offer.id,
+      internal_name: offer.id || offer.name,
+      title: offer.name,
+      description: offer.description || "Aplique antes do Body Splash e seu cheiro dura o DIA INTEIRO.",
+      price: offer.price,
+      compare_at_price: offer.compareAtPrice,
+      image: offer.image === "IMG_2112.PNG.png" ? "" : offer.image,
+      status: offer.enabled === false ? "inactive" : "active",
+      type: "order_bump",
+      placement: "checkout",
+      max_quantity: 1,
+      display_condition: { type: "all" },
+    }));
+  const rows = [...tableRows, ...legacyRows];
+  state.cache.offers_v2 = rows;
+  return rows;
+}
+
+function offerThumb(row = {}) {
+  const image = row.image && row.image !== "IMG_2112.PNG.png" ? row.image : "";
+  return image
+    ? `<img src="${esc(image)}" style="width:46px;height:46px;border-radius:12px;object-fit:cover">`
+    : `<div class="empty-thumb">sem imagem</div>`;
+}
+
+function offerModal(row = {}) {
+  const image = row.image === "IMG_2112.PNG.png" ? "" : row.image;
+  openModal(row.id ? "Editar order bump" : "Novo order bump", `
+    <div class="tabs"><button class="tab-btn active">Informações</button><button class="tab-btn">Preço</button><button class="tab-btn">Mídia</button><button class="tab-btn">Regras</button><button class="tab-btn">Preview</button></div>
+    <div class="grid grid-2">
+      <div>
+        <div class="form-grid">
+          ${field("Nome interno", "internal_name", row.internal_name)}
+          ${field("Nome exibido no checkout", "title", row.title)}
+          ${field("Preço em centavos", "price", row.price, "number")}
+          ${field("Preço riscado em centavos", "compare_at_price", row.compare_at_price, "number")}
+          ${selectField("Status", "status", row.status || "active", ["active", "inactive"])}
+          ${selectField("Tipo", "type", row.type || "order_bump", ["order_bump", "upsell", "downsell", "kit", "post_purchase", "cart"])}
+          ${selectField("Onde aparece", "placement", row.placement || "checkout", ["checkout", "cart", "post_purchase"])}
+          ${field("Quantidade máxima por pedido", "max_quantity", row.max_quantity || 1, "number")}
+          ${selectField("Condição de exibição", "condition_type", row.display_condition?.type || "all", ["all", "min_value", "utm", "origin"])}
+        </div>
+        ${areaField("Descrição exibida", "description", row.description || "Aplique antes do Body Splash e seu cheiro dura o DIA INTEIRO.")}
+        ${field("Imagem / URL", "image", image || "")}
+        <label class="field">Upload da imagem<input id="offerImageUpload" type="file" accept="image/*"></label>
+        <div style="margin-top:18px"><button class="primary-action" id="saveModal">Salvar order bump</button></div>
+      </div>
+      <div class="preview-box">
+        <h3>Preview no checkout</h3>
+        <div class="offer" style="min-height:auto">
+          <img id="offerPreviewImg" src="${esc(image || "")}" alt="">
+          <h3 id="offerPreviewTitle">${esc(row.title || "Essential Body Cream")}</h3>
+          <del id="offerPreviewCompare">${money(row.compare_at_price || 3990)}</del>
+          <strong id="offerPreviewPrice">${money(row.price || 1990)}</strong>
+          <button type="button"><span></span>PEGAR OFERTA</button>
+          <p id="offerPreviewDescription">${esc(row.description || "")}</p>
+          <a>Ver mais</a>
+        </div>
+      </div>
+    </div>`);
+  const refreshPreview = () => {
+    const form = collectForm();
+    $("#offerPreviewImg").src = form.image || "";
+    $("#offerPreviewTitle").textContent = form.title || "Essential Body Cream";
+    $("#offerPreviewCompare").textContent = money(form.compare_at_price || 0);
+    $("#offerPreviewPrice").textContent = money(form.price || 0);
+    $("#offerPreviewDescription").textContent = form.description || "";
+  };
+  $$('[data-key]').forEach((el) => el.addEventListener("input", refreshPreview));
+  $("#offerImageUpload").onchange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => { $('[data-key="image"]').value = reader.result; refreshPreview(); };
+    reader.readAsDataURL(file);
+  };
+  $("#saveModal").onclick = async () => {
+    const data = collectForm();
+    data.display_condition = { type: data.condition_type };
+    delete data.condition_type;
+    const payload = { ...row, ...data };
+    if (payload._legacy) {
+      delete payload.id;
+      delete payload._legacy;
+      delete payload.legacy_id;
+    }
+    await upsert("offers_v2", payload);
+    closeModal();
+    renderOffers();
+  };
 }
 
 async function renderOrders() {
@@ -383,6 +487,83 @@ async function renderGateway() {
 function parseNames() { return String($('[data-key="names"]')?.value || "").split(/[\n,]+/).map((name) => name.trim()).filter(Boolean); }
 function bindGatewayNames() { const update = () => $("#nameCount").textContent = `${new Set(parseNames()).size} nomes válidos`; $('[data-key="names"]').addEventListener("input", update); update(); $("#dedupeNames").onclick = () => { $('[data-key="names"]').value = [...new Set(parseNames())].join("\n"); update(); }; $("#previewName").onclick = () => { const list = parseNames(); $("#namePreview").textContent = list.length ? list[Math.floor(Math.random()*list.length)] : "Lista vazia"; }; $("#generateNames").onclick = () => { $('[data-key="names"]').value += "\nElly Perfumaria\nKit Cuidados Pessoais\nEssenciais de Beleza\nCombo Perfumaria"; update(); }; $("#clearNames").onclick = () => { $('[data-key="names"]').value = ""; update(); }; $("#exportNames").onclick = () => download("gateway-nomes.txt", parseNames().join("\n")); $("#importNames").onchange = async (e) => { $('[data-key="names"]').value = await e.target.files[0].text(); update(); }; }
 async function saveGateway(button) { const form = collectForm(); const names = [...new Set(parseNames())]; await saveSettings({ gateway: { ...state.settings.gateway, publicKey: form.publicKey, secretKey: form.secretKey, token: form.token, postbackUrl: form.postbackUrl, environment: form.environment, pixExpiresInDays: form.pixExpiresInDays, providerName: form.providerName }, gateway_names: { enabled: $('[data-key="enabled"]').classList.contains("active"), names, dedupe: true } }, button); }
+
+async function renderGateway(active = "gateways") {
+  header("Gateways", "Gateway de pagamento, postbacks e mascaramento enviados ao provedor.", `<button class="primary-action" id="saveGatewayAll">Salvar gateway</button>`);
+  await refreshSettings();
+  const gateway = state.settings.gateway || {};
+  const masking = state.settings.gateway_masking || {};
+  const names = state.settings.gateway_names || { enabled: false, names: [] };
+  const body = {
+    gateways: gatewaySettingsView(gateway),
+    masking: gatewayMaskingView(gateway, masking, names),
+    logs: `<section class="card"><div class="section-title"><h2>Logs do gateway</h2><button class="secondary-action" id="reloadGatewayLogs">Atualizar</button></div><div id="gatewayLogs"></div></section>`,
+  }[active];
+  $("#viewRoot").innerHTML = `<section class="card gateway-tabs-card">${tabs([["gateways","Gateways"],["masking","Mascaramento pro Gateway"],["logs","Logs"]], active, body)}</section>`;
+  bindTabs((id) => renderGateway(id));
+  bindDirty();
+  $("#saveGatewayAll").onclick = (event) => saveGatewaySettings(active, event.currentTarget);
+  if (active === "gateways") {
+    $("#testGateway").onclick = () => testAction("gateway", "Teste de conexão Freepay");
+    $("#testPix").onclick = () => testAction("gateway", "Pix de teste solicitado");
+  }
+  if (active === "masking") bindGatewayMasking();
+  if (active === "logs") { $("#reloadGatewayLogs").onclick = () => renderGateway("logs"); await renderLogs("gateway", "#gatewayLogs"); }
+}
+
+function gatewaySettingsView(gateway = {}) {
+  return `<section class="grid grid-3"><div class="card"><span class="status-dot"></span> <b>Freepay</b><p>Gateway ativo para Pix e cartão.</p><span class="badge green">Ativo</span></div><div class="card"><span class="status-dot off"></span> <b>Buckpay</b><p>Preparado para integração futura.</p><span class="badge gray">Inativo</span></div><div class="card"><span class="status-dot off"></span> <b>Personalizado</b><p>Gateway customizado futuro.</p><span class="badge gray">Inativo</span></div></section><section class="grid grid-2" style="margin-top:18px"><div class="card"><h2>Credenciais Freepay</h2><div class="form-grid one">${field("Public Key","publicKey",gateway.publicKey)}${field("Secret Key","secretKey",gateway.secretKey,"password")}${field("Token","token",gateway.token,"password")}${field("Webhook URL","postbackUrl",gateway.postbackUrl)}${selectField("Ambiente","environment",gateway.environment || "production",["production","sandbox"])}${field("Pix expira em dias","pixExpiresInDays",gateway.pixExpiresInDays || 1,"number")}</div><div class="header-actions" style="margin-top:14px"><button class="secondary-action" id="testGateway">Testar conexão</button><button class="secondary-action" id="testPix">Gerar Pix de teste</button></div></div><div class="card"><h2>Webhooks em uso</h2><p>URL efetivamente enviada ao gateway ao criar a transação.</p><div class="flat-card"><b>Freepay</b><br><small>${esc(gateway.postbackUrl || "https://6a4437ee-6a2c-83e9-4571-7d0fa732u9e.vercel.app/api/freepay")}</small></div></div></section>`;
+}
+
+function gatewayMaskingView(gateway = {}, masking = {}, names = {}) {
+  const validNames = [...new Set((names.names || []).map((name) => String(name).trim()).filter(Boolean))];
+  const duplicateCount = Math.max(0, parseNamesFromValue((names.names || []).join("\n")).length - validNames.length);
+  const sampleReal = state.settings.product?.productName || "Oferta principal";
+  const sampleSent = validNames[0] || sampleReal;
+  return `<section class="gateway-hero"><div><span class="badge gray">CAMADA INTELIGENTE</span><h2>Mascaramento pro Gateway</h2><p>Controle somente nomes, metadados e referências externas. Não altera valores, cliente, documentos nem webhooks.</p></div><div class="gateway-hero-switch">${switchRow("Utilizar nomes personalizados","enabled",names.enabled)}</div></section><section class="grid grid-2" style="margin-top:18px"><div class="card"><div class="section-title"><h2>Lista e privacidade</h2></div><div class="form-grid one">${field("Nome do provedor enviado ao gateway","providerName",masking.providerName || gateway.providerName || "Elly Perfumaria")}</div><div class="privacy-box"><h3>Privacidade do envio ao Gateway</h3><p>Controla apenas metadados e referências externas. Não altera valores, cliente, documentos nem webhooks.</p><div class="grid grid-2">${switchRow("Enviar UTMs ao gateway","sendUtmsToGateway",masking.sendUtmsToGateway === true)}${switchRow("Mascarar ID externo do pedido","maskExternalOrderId",masking.maskExternalOrderId !== false)}${switchRow("Mascarar referência dos itens","maskItemRefs",masking.maskItemRefs !== false)}${field("UTM padrão enviada ao gateway","defaultUtm",masking.defaultUtm || "")}</div><small>Quando UTMs reais estiverem desligadas, a UTM padrão pode ser enviada no metadata.</small></div>${areaField("Lista de nomes personalizados (vírgula ou um por linha)","names",validNames.join("\n"),14)}<p><span class="badge blue" id="nameCount">${validNames.length} nomes válidos</span></p><div class="name-list-tools"><button class="secondary-action" id="dedupeNames">Remover duplicados</button><button class="secondary-action" id="previewName">Preview sorteado</button><button class="secondary-action" id="generateNames">Gerar nomes</button><button class="secondary-action" id="clearNames">Limpar</button><button class="secondary-action" id="exportNames">Exportar .txt</button><label class="secondary-action" style="cursor:pointer">Importar .txt<input class="hidden" id="importNames" type="file" accept=".txt"></label></div></div><aside><div class="card"><h2>Pré-visualização</h2><div class="preview-flow"><div><small>NOME REAL</small><b>${esc(sampleReal)}</b></div><span>↓</span><div class="sent"><small>NOME ENVIADO</small><b id="namePreview">${esc(sampleSent)}</b></div></div></div><section class="grid grid-2" style="margin-top:18px">${metric("Cadastrados", validNames.length, "nomes na lista")}${metric("Válidos", validNames.length, "após limpeza")}${metric("Duplicados", duplicateCount, "removíveis")}${metric("Status", names.enabled ? "Ativo" : "Inativo", "nomes personalizados")}</section><div class="card" style="margin-top:18px"><h2>Auditoria rápida</h2><div class="audit-row"><span>Provedor enviado</span><b>${esc(masking.providerName || gateway.providerName || "Elly Perfumaria")}</b></div><div class="audit-row"><span>UTMs no gateway</span><b>${masking.sendUtmsToGateway === true ? "Ligadas" : "Desligadas"}</b></div><div class="audit-row"><span>ID do pedido</span><b>${masking.maskExternalOrderId !== false ? "Mascarado" : "Real"}</b></div><div class="audit-row"><span>Ref. dos itens</span><b>${masking.maskItemRefs !== false ? "Mascarada" : "Real"}</b></div></div></aside></section><section class="card" style="margin-top:18px"><div class="section-title"><h2>Logs de nomes enviados</h2><button class="secondary-action" id="reloadGatewayMaskLogs">Atualizar</button></div><div id="gatewayMaskLogs"></div></section>`;
+}
+
+function parseNamesFromValue(value) { return String(value || "").split(/[\n,]+/).map((name) => name.trim()).filter(Boolean); }
+
+function bindGatewayMasking() {
+  const update = () => {
+    const names = [...new Set(parseNames())];
+    if ($("#nameCount")) $("#nameCount").textContent = `${names.length} nomes válidos`;
+  };
+  $('[data-key="names"]')?.addEventListener("input", update);
+  update();
+  $("#dedupeNames").onclick = () => { $('[data-key="names"]').value = [...new Set(parseNames())].join("\n"); update(); };
+  $("#previewName").onclick = () => { const list = parseNames(); $("#namePreview").textContent = list.length ? list[Math.floor(Math.random() * list.length)] : "Lista vazia"; };
+  $("#generateNames").onclick = () => { $('[data-key="names"]').value += "\nBody Splash Vanilla Dream\nBody Splash Cherry Blossom\nBody Splash Cotton Fresh\nPerfume Royal Night\nPerfume Ocean Blue\nPerfume Crystal Bloom"; update(); };
+  $("#clearNames").onclick = () => { $('[data-key="names"]').value = ""; update(); };
+  $("#exportNames").onclick = () => download("gateway-nomes.txt", parseNames().join("\n"));
+  $("#importNames").onchange = async (event) => { $('[data-key="names"]').value = await event.target.files[0].text(); update(); };
+  $("#reloadGatewayMaskLogs").onclick = () => renderGateway("masking");
+  renderLogs("gateway", "#gatewayMaskLogs");
+}
+
+async function saveGatewaySettings(active, button) {
+  const form = collectForm();
+  if (active === "gateways") {
+    return saveSettings({ gateway: { ...state.settings.gateway, publicKey: form.publicKey, secretKey: form.secretKey, token: form.token, postbackUrl: form.postbackUrl, environment: form.environment, pixExpiresInDays: form.pixExpiresInDays } }, button);
+  }
+  if (active === "masking") {
+    const names = [...new Set(parseNames())];
+    return saveSettings({
+      gateway: { ...state.settings.gateway, providerName: form.providerName },
+      gateway_names: { enabled: $('[data-key="enabled"]')?.classList.contains("active") || false, names, dedupe: true },
+      gateway_masking: {
+        ...state.settings.gateway_masking,
+        providerName: form.providerName,
+        sendUtmsToGateway: $('[data-key="sendUtmsToGateway"]')?.classList.contains("active") || false,
+        maskExternalOrderId: $('[data-key="maskExternalOrderId"]')?.classList.contains("active") !== false,
+        maskItemRefs: $('[data-key="maskItemRefs"]')?.classList.contains("active") !== false,
+        defaultUtm: form.defaultUtm || "",
+      },
+    }, button);
+  }
+  toast("Nada para salvar nesta aba.");
+}
 async function testAction(type, message) { const res = await adminApi({ action: "test" }, { method: "POST", body: JSON.stringify({ type, source: "admin", message }) }); toast(`Teste executado: ${res.status}`); }
 
 async function renderIntegrations() {
@@ -402,13 +583,13 @@ function shipmentModal(row={}) { openModal("Envio", `<div class="form-grid">${fi
 async function renderCustomers() { header("Clientes", "Lista de compradores, histórico, origem, tags e observações internas."); const rows = await list("customers"); $("#viewRoot").innerHTML = resourceTable({ rows, resource:"customers", empty:"Nenhum cliente consolidado", columns:[["Cliente",r=>`<b>${esc(r.name||"-")}</b><br><small>${esc(r.email||"")}</small>`],["Telefone",r=>esc(r.phone||"-")],["CPF",r=>esc(r.cpf||"-")],["Cidade",r=>`${esc(r.city||"-")}/${esc(r.state||"")}`],["Total gasto",r=>money(r.total_spent)],["Pedidos",r=>r.orders_count||0],["Status",r=>badge(r.status)]] }); bindResourceActions("customers", customerModal, () => renderCustomers()); }
 function customerModal(row={}) { openModal("Ficha do cliente", `<div class="grid grid-2"><div class="flat-card"><h3>Dados pessoais</h3><p>${esc(row.name)}<br>${esc(row.phone)}<br>${esc(row.email)}<br>${esc(row.cpf)}</p></div><div class="flat-card"><h3>Histórico</h3><p>${row.orders_count||0} pedidos<br>${money(row.total_spent)} total gasto<br>Último pedido: ${fmtDate(row.last_order_at)}</p></div></div>${areaField("Observações internas","notes",row.notes||"")}<div style="margin-top:18px"><button class="primary-action" id="saveModal">Salvar cliente</button></div>`); $("#saveModal").onclick = async () => { await upsert("customers", {...row,...collectForm()}); closeModal(); renderCustomers(); }; }
 
-async function renderReports() { header("Relatórios", "Vendas, conversão, Pix, UTMs, ticket médio e exportações.", `<button class="secondary-action" id="exportReport">Exportar CSV</button>`); const dash = await adminApi({ action:"dashboard" }); const m = dash.metrics; $("#viewRoot").innerHTML = `<div class="toolbar"><select><option>Hoje</option><option>Ontem</option><option>Últimos 7 dias</option><option>Últimos 30 dias</option><option>Mês atual</option><option>Mês anterior</option><option>Personalizado</option></select></div><section class="grid grid-4">${metric("Vendas", money(m.revenue))}${metric("Produtos vendidos", m.paidOrders)}${metric("Pix gerados vs pagos", `${m.pixGenerated}/${m.pixPaid}`)}${metric("Ticket médio", money(m.averageTicket))}</section><section class="grid grid-2" style="margin-top:18px"><div class="card"><h2>Faturamento por dia</h2><div class="chart">${dash.charts.salesByDay.map(d=>`<div class="bar" style="height:${Math.max(8,d.revenue/Math.max(1,m.sevenDayRevenue)*100)}%"></div>`).join("")}</div></div><div class="card"><h2>UTMs com maior faturamento</h2><div class="empty-state"><b>Sem UTMs suficientes</b><span>Os dados aparecem quando houver tráfego com parâmetros.</span></div></div></section>`; $("#exportReport").onclick = () => exportCsv("relatorio.csv", dash.charts.salesByDay); }
+async function renderReports() { header("Relatórios", "Vendas, conversão, Pix, UTMs, ticket médio e exportações.", `<button class="secondary-action" id="exportReport">Exportar CSV</button>`); const dash = await adminApi({ action:"dashboard" }); const m = dash.metrics; $("#viewRoot").innerHTML = `<div class="toolbar"><select><option>Hoje</option><option>Ontem</option><option>Últimos 7 dias</option><option>Últimos 30 dias</option><option>Mês atual</option><option>Mês anterior</option><option>Personalizado</option></select></div><section class="grid grid-4">${metric("Vendas", money(m.revenue))}${metric("Pedidos pagos", m.paidOrders)}${metric("Pix gerados vs pagos", `${m.pixGenerated}/${m.pixPaid}`)}${metric("Ticket médio", money(m.averageTicket))}</section><section class="grid grid-2" style="margin-top:18px"><div class="card"><h2>Faturamento por dia</h2><div class="chart">${dash.charts.salesByDay.map(d=>`<div class="bar" style="height:${Math.max(8,d.revenue/Math.max(1,m.sevenDayRevenue)*100)}%"></div>`).join("")}</div></div><div class="card"><h2>UTMs com maior faturamento</h2><div class="empty-state"><b>Sem UTMs suficientes</b><span>Os dados aparecem quando houver tráfego com parâmetros.</span></div></div></section>`; $("#exportReport").onclick = () => exportCsv("relatorio.csv", dash.charts.salesByDay); }
 
 async function renderAppearance() { header("Aparência", "Logo, favicon, cores, textos, reviews, FAQ, selos e rodapé.", `<button class="primary-action" id="saveAppearance">Salvar aparência</button>`); await refreshSettings(); $("#viewRoot").innerHTML = `<section class="grid grid-2"><div class="card"><h2>Tema</h2><div class="form-grid one">${field("Logo","logo",state.settings.branding?.logo)}${field("Favicon","favicon",state.settings.branding?.favicon)}${field("Cor principal","primaryColor",state.settings.branding?.primaryColor,"color")}${field("Cor secundária","secondaryColor",state.settings.branding?.secondaryColor,"color")}${field("Cor dos botões","buttonColor",state.settings.branding?.buttonColor,"color")}${field("Cor dos textos","textColor",state.settings.branding?.textColor,"color")}${field("Fonte","fontPrimary",state.settings.branding?.fontPrimary)}</div></div><div class="card"><h2>Conteúdo visual</h2>${areaField("Selos de segurança (JSON)","badges",JSON.stringify(state.settings.appearance?.badges||[],null,2),6)}${areaField("Reviews (JSON)","reviews",JSON.stringify(state.settings.appearance?.reviews||[],null,2),6)}${areaField("FAQ (JSON)","faq",JSON.stringify(state.settings.appearance?.faq||[],null,2),6)}${areaField("Rodapé","footerText",state.settings.appearance?.footerText||"")}</div></section>`; bindDirty(); $("#saveAppearance").onclick = (e) => { const form=collectForm(); saveSettings({ branding:{...state.settings.branding,...form}, appearance:{ badges:safeJson(form.badges,[]), reviews:safeJson(form.reviews,[]), faq:safeJson(form.faq,[]), footerText:form.footerText } }, e.currentTarget); }; }
 function safeJson(value, fallback) { try { return JSON.parse(value); } catch { return fallback; } }
 
 async function renderUsers() { header("Usuários/Admins", "Estrutura para admins, permissões, bloqueios e logs de acesso.", `<button class="primary-action" id="newUser">Novo admin</button>`); const rows = await list("admin_users"); $("#viewRoot").innerHTML = resourceTable({ rows, resource:"admin_users", empty:"Nenhum usuário cadastrado", columns:[["Nome",r=>`<b>${esc(r.name)}</b><br><small>${esc(r.email||"")}</small>`],["Função",r=>esc(r.role)],["Permissões",r=>`<span class="kbd">${esc(JSON.stringify(r.permissions||{}))}</span>`],["Status",r=>badge(r.status)],["Último login",r=>fmtDate(r.last_login_at)]] }); bindResourceActions("admin_users", userModal, () => renderUsers()); $("#newUser").onclick=()=>userModal({role:"admin",status:"active",permissions:{all:true}}); }
-function userModal(row={}) { openModal("Admin", `<div class="form-grid">${field("Nome","name",row.name)}${field("E-mail","email",row.email)}${selectField("Função","role",row.role||"admin",["admin","orders","products","reports","settings","logistics"])}${selectField("Status","status",row.status||"active",["active","blocked"])}</div>${areaField("Permissões JSON","permissions",JSON.stringify(row.permissions||{all:true},null,2),6)}<div style="margin-top:18px"><button class="primary-action" id="saveModal">Salvar admin</button></div>`); $("#saveModal").onclick=async()=>{const data=collectForm(); data.permissions=safeJson(data.permissions,{all:true}); await upsert("admin_users",{...row,...data}); closeModal(); renderUsers();}; }
+function userModal(row={}) { openModal("Admin", `<div class="form-grid">${field("Nome","name",row.name)}${field("E-mail","email",row.email)}${selectField("Função","role",row.role||"admin",["admin","orders","reports","settings","logistics"])}${selectField("Status","status",row.status||"active",["active","blocked"])}</div>${areaField("Permissões JSON","permissions",JSON.stringify(row.permissions||{all:true},null,2),6)}<div style="margin-top:18px"><button class="primary-action" id="saveModal">Salvar admin</button></div>`); $("#saveModal").onclick=async()=>{const data=collectForm(); data.permissions=safeJson(data.permissions,{all:true}); await upsert("admin_users",{...row,...data}); closeModal(); renderUsers();}; }
 
 async function renderSystem() { header("Sistema", "Logs, webhooks, segurança, backup, status do banco e aplicação.", `<button class="secondary-action" id="reloadLogs">Atualizar logs</button>`); const logs = await list("logs"); $("#viewRoot").innerHTML = `<section class="grid grid-4">${metric("Status do banco","Online","Supabase configurado")}${metric("Logs",logs.length,"últimos registros")}${metric("Segurança","Token","ADMIN_TOKEN ativo")}${metric("Backup","Manual","exportações CSV disponíveis")}</section><section class="card" style="margin-top:18px"><div class="toolbar"><select><option>Todos os tipos</option><option>gateway</option><option>pixel</option><option>utmify</option><option>webhook</option><option>error</option></select><input placeholder="Buscar log"></div>${logs.length?`<div class="table-wrap"><table><thead><tr><th>Data</th><th>Tipo</th><th>Nível</th><th>Origem</th><th>Mensagem</th><th>Status</th><th>Payload</th></tr></thead><tbody>${logs.map(l=>`<tr><td>${fmtDate(l.created_at)}</td><td>${esc(l.type)}</td><td>${badge(l.level)}</td><td>${esc(l.source||"-")}</td><td>${esc(l.message)}</td><td>${l.status_code||"-"}</td><td><pre class="log-payload">${esc(JSON.stringify(l.payload||{},null,2))}</pre></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty-state"><b>Nenhum log registrado</b><span>Logs de gateway, pixel e webhooks aparecerão aqui.</span></div>`}</section>`; $("#reloadLogs").onclick = renderSystem; }
 

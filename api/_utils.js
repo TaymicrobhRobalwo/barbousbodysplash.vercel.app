@@ -17,6 +17,13 @@ const defaults = {
     postbackUrl: "https://6a4437ee-6a2c-83e9-4571-7d0fa732u9e.vercel.app/api/freepay",
     pixExpiresInDays: 1,
   },
+  gateway_masking: {
+    providerName: "Elly Perfumaria",
+    sendUtmsToGateway: false,
+    maskExternalOrderId: true,
+    maskItemRefs: true,
+    defaultUtm: "",
+  },
   store: {
     storeName: "Barbour's Beauty",
     domain: "",
