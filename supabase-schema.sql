@@ -193,7 +193,7 @@ values
   ('product', '{"storeName":"Barbour''s Beauty","productName":"Kit 4 Body Splash Barbours Beauty 200ml | Delight + Very Sexy + Roses + Good Grace","price":9749,"compareAtPrice":29900,"image":"IMG_2103.jpg","quantity":1,"expirationMinutes":20}'::jsonb),
   ('gateway', '{"providerName":"Elly Perfumaria","postbackUrl":"https://6a4437ee-6a2c-83e9-4571-7d0fa732u9e.vercel.app/api/freepay","pixExpiresInDays":1}'::jsonb),
   ('store', '{"storeName":"Barbour''s Beauty","domain":"","whatsapp":"","supportEmail":"","defaultCity":"","defaultState":"","status":"active","closedMessage":"Loja temporariamente fechada.","currency":"BRL","timezone":"America/Sao_Paulo"}'::jsonb),
-  ('checkout', '{"timerMinutes":20,"pixDiscount":0,"buttonText":"Pagar","securityText":"Seus dados estão seguros conosco","quickBuy":true,"skipCart":true,"couponEnabled":false,"phoneRequired":true,"cpfRequired":true,"addressRequired":true,"emailAutocomplete":true,"masksEnabled":true}'::jsonb),
+  ('checkout', '{"timerMinutes":20,"pixDiscount":0,"buttonText":"Pagar","securityText":"Seus dados estão seguros conosco","quickBuy":true,"skipCart":true,"couponEnabled":false,"phoneRequired":true,"cpfRequired":true,"addressRequired":true,"emailAutocomplete":true,"masksEnabled":true,"creditCardEnabled":true,"creditCardMaxInstallments":12,"creditCardInstallmentFee":3.99}'::jsonb),
   ('branding', '{"logo":"","favicon":"","primaryColor":"#FE2C56","secondaryColor":"#101828","buttonColor":"#FE2C56","backgroundColor":"#f5f7fb","textColor":"#101828","fontPrimary":"Inter","fontHeadings":"Inter","backgroundImage":"","mainBanner":""}'::jsonb),
   ('gateway_names', '{"enabled":false,"names":[],"dedupe":true}'::jsonb),
   ('appearance', '{"badges":[],"reviews":[],"faq":[],"footerText":""}'::jsonb),

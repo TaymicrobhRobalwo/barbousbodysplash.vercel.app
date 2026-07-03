@@ -218,8 +218,8 @@ function productMainForm(v = {}) {
 }
 
 function checkoutForm(v = {}) {
-  const toggles = [["Compra rápida","quickBuy"],["Pular carrinho","skipCart"],["Campo de cupom","couponEnabled"],["Telefone obrigatório","phoneRequired"],["CPF obrigatório","cpfRequired"],["Endereço obrigatório","addressRequired"],["Autocomplete de e-mail","emailAutocomplete"],["Máscaras telefone/CPF/CEP","masksEnabled"]];
-  return `<div class="form-grid">${field("Timer em minutos","timerMinutes",v.timerMinutes,"number")}${field("Desconto no Pix (%)","pixDiscount",v.pixDiscount,"number")}${field("Texto do botão principal","buttonText",v.buttonText)}${field("Texto de segurança","securityText",v.securityText)}</div><div class="flat-card" style="margin-top:18px">${toggles.map(([label,key]) => switchRow(label,key,v[key])).join("")}</div>`;
+  const toggles = [["Compra rápida","quickBuy"],["Pular carrinho","skipCart"],["Campo de cupom","couponEnabled"],["Telefone obrigatório","phoneRequired"],["CPF obrigatório","cpfRequired"],["Endereço obrigatório","addressRequired"],["Autocomplete de e-mail","emailAutocomplete"],["Máscaras telefone/CPF/CEP","masksEnabled"],["Pagamento por cartão de crédito","creditCardEnabled"]];
+  return `<div class="form-grid">${field("Timer em minutos","timerMinutes",v.timerMinutes,"number")}${field("Desconto no Pix (%)","pixDiscount",v.pixDiscount,"number")}${field("Texto do botão principal","buttonText",v.buttonText)}${field("Texto de segurança","securityText",v.securityText)}${field("Máximo de parcelas no cartão","creditCardMaxInstallments",v.creditCardMaxInstallments || 12,"number")}${field("Taxa de parcelamento cartão (%)","creditCardInstallmentFee",v.creditCardInstallmentFee || 3.99,"number")}</div><div class="flat-card" style="margin-top:18px">${toggles.map(([label,key]) => switchRow(label,key,key === "creditCardEnabled" ? v[key] !== false : v[key])).join("")}</div>`;
 }
 
 function brandingForm(v = {}) {

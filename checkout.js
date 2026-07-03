@@ -8,6 +8,8 @@ const state = {
   pixels: [],
   checkout: {},
   branding: {},
+  paymentMethod: "pix",
+  card: null,
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -38,6 +40,33 @@ function updateTotals() {
   $("#itemCount").textContent = count;
   $("#pixAmountTitle").textContent = money(subtotal);
   $("#chargedAs").textContent = money(subtotal);
+}
+
+function cardTotal() {
+  const fee = Number(state.checkout.creditCardInstallmentFee || 3.99) / 100;
+  return Math.round(total() * (1 + fee));
+}
+
+function renderInstallments() {
+  const select = $("#installments");
+  if (!select) return;
+  const max = Number(state.checkout.creditCardMaxInstallments || 12);
+  const amount = total();
+  const cardAmount = cardTotal();
+  select.innerHTML = Array.from({ length: max }).map((_, index) => {
+    const installments = index + 1;
+    const base = installments === 1 ? amount : cardAmount;
+    const label = installments === 1
+      ? `1x de ${money(amount).replace("R$", "")} Sem juros`
+      : `${installments}x de ${money(Math.round(base / installments)).replace("R$", "")}`;
+    return `<option value="${installments}" ${installments === max ? "selected" : ""}>${label}</option>`;
+  }).join("");
+  $("#installmentFeeText").textContent = `Taxa de parcelamento de ${String(state.checkout.creditCardInstallmentFee || 3.99).replace(".", ",")}% no cartão de crédito.`;
+}
+
+function setPaymentMethod(method) {
+  state.paymentMethod = method;
+  document.querySelectorAll("[data-payment]").forEach((item) => item.classList.toggle("selected", item.dataset.payment === method));
 }
 
 function renderOffer() {
@@ -141,10 +170,14 @@ async function createPix() {
     const response = await fetch("/api/checkout", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ customer: state.customer, address: state.address, offerIds: [...state.selectedOffers], utms: collectUtm() }),
+      body: JSON.stringify({ paymentMethod: state.paymentMethod, card: state.card, customer: state.customer, address: state.address, offerIds: [...state.selectedOffers], utms: collectUtm() }),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Erro ao gerar Pix");
+    if (state.paymentMethod === "credit_card") {
+      alert("Pagamento enviado para aprovação.");
+      return;
+    }
     $("#pixCode").textContent = data.pixCode || data.pixUrl || "Código Pix não retornado pelo gateway";
     $("#pixDeadline").textContent = new Date(data.expiresAt || Date.now() + 20 * 60000).toLocaleString("pt-BR", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short", year: "numeric" });
     track("Purchase", { value: total() / 100, currency: "BRL", order_id: data.orderId });
@@ -176,7 +209,9 @@ async function init() {
   $("#productImage").src = state.product.image || "IMG_2103.jpg";
   $("#offerCount").textContent = `${state.offers.length} ofertas`;
   applyCheckoutTheme();
+  if (state.checkout.creditCardEnabled !== false) $("#creditPayment").classList.remove("hidden");
   updateTotals();
+  renderInstallments();
   renderOffer();
   startCountdown(state.checkout.timerMinutes || state.product.expirationMinutes || 20, $("#countdown"));
   startCountdown(10, $("#pixCountdown"));
@@ -205,6 +240,41 @@ $("#addressForm").onsubmit = (event) => {
   $("#addressSubtitle").textContent = `${state.address.street}, ${state.address.number || "S/N"} — ${state.address.city}/${state.address.state}`;
   show("summaryScreen");
 };
+
+document.querySelectorAll("[data-payment]").forEach((item) => {
+  item.addEventListener("click", () => setPaymentMethod(item.dataset.payment));
+});
+
+$("#payButton").onclick = () => {
+  if (!state.customer.name) return show("customerScreen");
+  if (state.paymentMethod === "credit_card" && !state.card) return show("cardScreen");
+  createPix();
+};
+
+$("#cardForm").onsubmit = (event) => {
+  event.preventDefault();
+  const form = Object.fromEntries(new FormData(event.currentTarget));
+  const [month, year] = String(form.validity || "").split("/");
+  state.card = {
+    number: digits(form.number),
+    holder_name: form.holder_name,
+    expiration_month: Number(month),
+    expiration_year: Number(year?.length === 2 ? `20${year}` : year),
+    cvv: digits(form.cvv),
+    installments: Number(form.installments || 1),
+  };
+  setPaymentMethod("credit_card");
+  show("summaryScreen");
+};
+
+$("#cardNumber").addEventListener("input", (event) => {
+  event.target.value = digits(event.target.value).slice(0, 19).replace(/(\d{4})(?=\d)/g, "$1 ");
+});
+
+$("#cardValidity").addEventListener("input", (event) => {
+  const value = digits(event.target.value).slice(0, 4);
+  event.target.value = value.length > 2 ? `${value.slice(0, 2)}/${value.slice(2)}` : value;
+});
 
 $("#cep").addEventListener("blur", async (event) => {
   const cep = digits(event.target.value);

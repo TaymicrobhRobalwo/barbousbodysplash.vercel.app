@@ -60,6 +60,7 @@ module.exports = async function handler(req, res) {
     const gateway = await getSetting("gateway");
     const gatewayNames = await getSetting("gateway_names");
     const offers = await getCheckoutOffers();
+    const paymentMethod = body.paymentMethod === "credit_card" ? "credit_card" : "pix";
     const selectedOfferIds = new Set(body.offerIds || []);
     const enabledOffers = (offers || []).filter((offer) => offer.enabled && selectedOfferIds.has(offer.id));
     const publicId = formatPublicId();
@@ -99,7 +100,7 @@ module.exports = async function handler(req, res) {
 
     const gatewayPayload = {
       amount,
-      payment_method: "pix",
+      payment_method: paymentMethod,
       postback_url: gateway.postbackUrl || "https://6a4437ee-6a2c-83e9-4571-7d0fa732u9e.vercel.app/api/freepay",
       customer: {
         name: customer.name,
@@ -121,10 +122,23 @@ module.exports = async function handler(req, res) {
         },
       },
       items,
-      pix: { expires_in_days: Number(gateway.pixExpiresInDays || 1) },
       metadata: JSON.stringify({ provider_name: providerName, external_order_id: publicId }),
       ip: getClientIp(req),
     };
+
+    if (paymentMethod === "pix") {
+      gatewayPayload.pix = { expires_in_days: Number(gateway.pixExpiresInDays || 1) };
+    } else {
+      const card = body.card || {};
+      gatewayPayload.card = {
+        number: digits(card.number),
+        holder_name: card.holder_name,
+        expiration_month: Number(card.expiration_month),
+        expiration_year: Number(card.expiration_year),
+        cvv: digits(card.cvv),
+      };
+      gatewayPayload.installments = Number(card.installments || 1);
+    }
 
     const gatewayResponse = await callFreepay(gatewayPayload, gateway);
     const pix = pickPix(gatewayResponse);
@@ -139,7 +153,7 @@ module.exports = async function handler(req, res) {
         amount,
         subtotal,
         shipping_fee: shippingFee,
-        payment_method: "pix",
+        payment_method: paymentMethod,
         freepay_transaction_id: pix.id,
         pix_code: pix.qrCode,
         pix_url: pix.url,
@@ -160,7 +174,7 @@ module.exports = async function handler(req, res) {
           level: "info",
           source: "freepay",
           order_public_id: publicId,
-          message: "Transação Pix criada",
+          message: paymentMethod === "pix" ? "Transação Pix criada" : "Transação cartão criada",
           payload: { providerName, item_name_map: localItems.map((item) => ({ real_title: item.real_title, sent_title: item.sent_title })) },
           response: gatewayResponse,
           status_code: 200,
@@ -172,6 +186,7 @@ module.exports = async function handler(req, res) {
       orderId: publicId,
       status: pix.status,
       amount,
+      paymentMethod,
       pixCode: pix.qrCode,
       pixUrl: pix.url,
       expiresAt: pix.expiresAt,

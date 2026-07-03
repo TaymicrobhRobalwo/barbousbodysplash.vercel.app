@@ -42,6 +42,9 @@ const defaults = {
     addressRequired: true,
     emailAutocomplete: true,
     masksEnabled: true,
+    creditCardEnabled: true,
+    creditCardMaxInstallments: 12,
+    creditCardInstallmentFee: 3.99,
   },
   branding: {
     logo: "",

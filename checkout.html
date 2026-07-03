@@ -16,7 +16,7 @@
       </header>
 
       <button class="address-strip" id="openCustomer" type="button">
-        <span class="pin">⌾</span>
+        <span class="pin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></svg></span>
         <span><b id="addressTitle">Preencha seus dados</b><small id="addressSubtitle">Identificação e endereço de entrega</small></span>
         <span>›</span>
       </button>
@@ -43,8 +43,13 @@
 
       <section class="card payment-card">
         <h2>Forma de pagamento</h2>
-        <label class="payment selected">
-          <span class="payicon pixicon">◆</span>
+        <label class="payment hidden" id="creditPayment" data-payment="credit_card">
+          <span class="payicon cardicon">▭</span>
+          <span><b>Cartão de crédito</b><small>Aprovação imediata no seu cartão.</small></span>
+          <i></i>
+        </label>
+        <label class="payment selected" id="pixPayment" data-payment="pix">
+          <span class="payicon pixicon"><svg height="32" width="36" viewBox="0 0 36 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28.0778 24.6009C26.6647 24.6009 25.3386 24.1344 24.3386 23.2758L18.9473 18.6473C18.5778 18.33 17.9039 18.33 17.5343 18.6473L12.1213 23.2945C11.1213 24.153 9.79516 24.6196 8.38212 24.6196H7.31689L14.1647 30.4986C16.2952 32.3277 19.7734 32.3277 21.9039 30.4986L28.7734 24.6009H28.0778Z" fill="#14b8a6"></path><path d="M8.356 8.21479C9.76904 8.21479 11.0951 8.68138 12.0951 9.53991L17.5082 14.1871C17.8995 14.5231 18.5299 14.5231 18.9212 14.1871L24.3343 9.55857C25.3343 8.70004 26.6604 8.23345 28.0734 8.23345H28.7256L21.856 2.33576C19.7256 0.506732 16.2473 0.506732 14.1169 2.33576L7.26904 8.21479H8.356Z" fill="#14b8a6"></path><path d="M34.4022 13.1043L30.25 9.53954C30.163 9.57686 30.0544 9.59553 29.9457 9.59553H28.0543C27.0761 9.59553 26.1196 9.93147 25.4457 10.5287L20.0543 15.1573C19.5543 15.5865 18.8804 15.8105 18.2283 15.8105C17.5543 15.8105 16.9022 15.5865 16.4022 15.1573L10.9891 10.51C10.2935 9.91281 9.33696 9.57686 8.38044 9.57686H6.05435C5.94565 9.57686 5.8587 9.5582 5.77174 9.52087L1.59783 13.1043C-0.532609 14.9333 -0.532609 17.9195 1.59783 19.7485L5.74999 23.3133C5.83695 23.2759 5.92392 23.2573 6.03261 23.2573H8.35869C9.33695 23.2573 10.2935 22.9213 10.9674 22.3241L16.3804 17.6769C17.3587 16.837 19.0761 16.837 20.0543 17.6769L25.4457 22.3054C26.1413 22.9027 27.0978 23.2386 28.0543 23.2386H29.9457C30.0544 23.2386 30.1413 23.2573 30.25 23.2946L34.4022 19.7299C36.5326 17.9008 36.5326 14.9333 34.4022 13.1043Z" fill="#14b8a6"></path></svg></span>
           <span><b>Pix</b><small>Pague e obtenha confirmação instantânea.</small></span>
           <i></i>
         </label>
@@ -65,6 +70,22 @@
         <strong id="footerTotal">R$97,49</strong>
         <button id="payButton" type="button">Pagar</button>
       </footer>
+    </section>
+
+    <section id="cardScreen" class="screen form-screen card-screen">
+      <header class="form-top"><button class="back" data-back="summaryScreen" type="button">‹</button><b>Dados do cartão</b></header>
+      <form id="cardForm" class="form-card">
+        <div class="card-brands"><span>●●</span><b>VISA</b><em>AMEX</em><strong>elo</strong><small>Hiper</small></div>
+        <label>Número do cartão<input name="number" id="cardNumber" inputmode="numeric" placeholder="4122 6777 5698 4588" required></label>
+        <label>Nome impresso no cartão<input name="holder_name" placeholder="Gabriel M Dourado" required></label>
+        <div class="grid2">
+          <label>Validade<input name="validity" id="cardValidity" inputmode="numeric" placeholder="MM/AA" required></label>
+          <label>Cod. Segurança<input name="cvv" inputmode="numeric" placeholder="123" required></label>
+        </div>
+        <label>Parcelamento<select name="installments" id="installments"></select></label>
+        <small class="forecast" id="installmentFeeText">Taxa de parcelamento de 3,99% no cartão de crédito.</small>
+        <button class="primary" type="submit">Salvar dados do cartão</button>
+      </form>
     </section>
 
     <section id="customerScreen" class="screen form-screen">
@@ -114,7 +135,7 @@
         <p>Vence em <b class="pix-timer" id="pixCountdown">00:10:00</b></p>
         <p>Prazo <b id="pixDeadline">00:20, 03 de jul 2026</b></p>
         <div class="pix-box">
-          <b class="pix-brand">◆ pix <span>PIX</span></b>
+          <b class="pix-brand"><svg height="32" width="36" viewBox="0 0 36 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28.0778 24.6009C26.6647 24.6009 25.3386 24.1344 24.3386 23.2758L18.9473 18.6473C18.5778 18.33 17.9039 18.33 17.5343 18.6473L12.1213 23.2945C11.1213 24.153 9.79516 24.6196 8.38212 24.6196H7.31689L14.1647 30.4986C16.2952 32.3277 19.7734 32.3277 21.9039 30.4986L28.7734 24.6009H28.0778Z" fill="#14b8a6"></path><path d="M8.356 8.21479C9.76904 8.21479 11.0951 8.68138 12.0951 9.53991L17.5082 14.1871C17.8995 14.5231 18.5299 14.5231 18.9212 14.1871L24.3343 9.55857C25.3343 8.70004 26.6604 8.23345 28.0734 8.23345H28.7256L21.856 2.33576C19.7256 0.506732 16.2473 0.506732 14.1169 2.33576L7.26904 8.21479H8.356Z" fill="#14b8a6"></path><path d="M34.4022 13.1043L30.25 9.53954C30.163 9.57686 30.0544 9.59553 29.9457 9.59553H28.0543C27.0761 9.59553 26.1196 9.93147 25.4457 10.5287L20.0543 15.1573C19.5543 15.5865 18.8804 15.8105 18.2283 15.8105C17.5543 15.8105 16.9022 15.5865 16.4022 15.1573L10.9891 10.51C10.2935 9.91281 9.33696 9.57686 8.38044 9.57686H6.05435C5.94565 9.57686 5.8587 9.5582 5.77174 9.52087L1.59783 13.1043C-0.532609 14.9333 -0.532609 17.9195 1.59783 19.7485L5.74999 23.3133C5.83695 23.2759 5.92392 23.2573 6.03261 23.2573H8.35869C9.33695 23.2573 10.2935 22.9213 10.9674 22.3241L16.3804 17.6769C17.3587 16.837 19.0761 16.837 20.0543 17.6769L25.4457 22.3054C26.1413 22.9027 27.0978 23.2386 28.0543 23.2386H29.9457C30.0544 23.2386 30.1413 23.2573 30.25 23.2946L34.4022 19.7299C36.5326 17.9008 36.5326 14.9333 34.4022 13.1043Z" fill="#14b8a6"></path></svg><span>PIX</span></b>
           <code id="pixCode">Gerando código Pix...</code>
           <button id="copyPix" type="button">⧉ Copiar</button>
         </div>
