@@ -2,6 +2,13 @@ const { readBody, sanitizeGatewayData, send, supabase } = require("./_utils");
 
 module.exports = async function handler(req, res) {
   try {
+    if (req.method === "GET") {
+      return send(res, 200, {
+        ok: true,
+        service: "freepay-webhook",
+        message: "Webhook ativo. A Freepay deve enviar eventos via POST para esta URL.",
+      });
+    }
     if (req.method !== "POST") return send(res, 405, { error: "Method not allowed" });
     const event = await readBody(req);
     const transactionId = event.Id || event.id || event.TransactionId || event.transaction_id || event.transactionId;

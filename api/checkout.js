@@ -32,7 +32,7 @@ async function callFreepay(payload, gateway) {
       authorization: "Basic " + Buffer.from(`${publicKey}:${secretKey}`).toString("base64"),
       "content-type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ request: payload }),
   });
 
   const text = await response.text();
@@ -191,7 +191,7 @@ module.exports = async function handler(req, res) {
         },
       },
       items: gatewayItems,
-      metadata: JSON.stringify(metadata),
+      metadata,
       ip: getClientIp(req),
     };
 
