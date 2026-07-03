@@ -1,0 +1,156 @@
+Uri: https://barbousbodysplash.vercel.app/apple-icon.png
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\apple-icon.png
+Content Type: image/png
+
+Uri: https://barbousbodysplash.vercel.app/icon-dark-32x32.png
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\icon-dark-32x32.png
+Content Type: image/png
+
+Uri: https://barbousbodysplash.vercel.app/icon-light-32x32.png
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\icon-light-32x32.png
+Content Type: image/png
+
+Uri: https://barbousbodysplash.vercel.app/icon.svg
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\icon.svg
+Content Type: image/svg+xml
+
+Uri: https://barbousbodysplash.vercel.app/images/barbours-logo.png?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\images\barbours-logo.png
+Content Type: image/png
+
+Uri: https://barbousbodysplash.vercel.app/kit4
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\kit4.html
+Content Type: text/html
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/047a36c4a8f439e1.js?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\047a36c4a8f439e1.js
+Content Type: application/javascript
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/150a08340a947ea6.js?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\150a08340a947ea6.js
+Content Type: application/javascript
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/1e53a16b00a69938.js?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\1e53a16b00a69938.js
+Content Type: application/javascript
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/26ca110782d86623.js?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\26ca110782d86623.js
+Content Type: application/javascript
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/6da5bd1c47c2c5a2.js?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\6da5bd1c47c2c5a2.js
+Content Type: application/javascript
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/81f0f13d25d49d65.js?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\81f0f13d25d49d65.js
+Content Type: application/javascript
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/88ef45449bc91df9.css?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\88ef45449bc91df9.css
+Content Type: text/css
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/a6dad97d9634a72d.js?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\a6dad97d9634a72d.js
+Content Type: application/javascript
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/aa26d68826ef8ea7.css?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\aa26d68826ef8ea7.css
+Content Type: text/css
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/ac6c3ba7f92517cf.js?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\ac6c3ba7f92517cf.js
+Content Type: application/javascript
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/cf2a49b7a2e1d1de.js?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\cf2a49b7a2e1d1de.js
+Content Type: application/javascript
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/ec3ed4f1c0abc986.js?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\ec3ed4f1c0abc986.js
+Content Type: application/javascript
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/ee495d04da23e614.js?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\ee495d04da23e614.js
+Content Type: application/javascript
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/chunks/turbopack-d407225f05eabbee.js?dpl=dpl_AsZ42FprKFxitr5Hu7SADNDd9onU
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\chunks\turbopack-d407225f05eabbee.js
+Content Type: application/javascript
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/media/797e433ab948586e-s.p.29207c2f.woff2
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\media\797e433ab948586e-s.p.29207c2f.woff2
+Content Type: font/woff2
+
+Uri: https://barbousbodysplash.vercel.app/_next/static/media/caa3a2e1cccd8315-s.p.3b6cae6d.woff2
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\_next\static\media\caa3a2e1cccd8315-s.p.3b6cae6d.woff2
+Content Type: font/woff2
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_2103-AgYnNFCDUsAxj1KthXo7Lo7xgnWjxh.jpg
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\IMG_2103.jpg
+Content Type: image/jpeg
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_2112.PNG-orXctsam1uhSkSUdO8LsrRNYTKm2dJ.png
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\IMG_2112.PNG.png
+Content Type: image/png
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_2115.PNG-dvE2FUk3yg3kGDJsssZLq84fHm8x19.png
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\IMG_2115.PNG.png
+Content Type: image/png
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_2117-cbVbHh6M4Ok05gnBm9l4Bs7exNYcA3.jpg
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\IMG_2117.jpg
+Content Type: image/jpeg
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_2118-1RV8nQ5kXGrYKiU3rucO2npnLDkBel.jpg
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\IMG_2118.jpg
+Content Type: image/jpeg
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_2127-kMffAhfUB8Bs2zHSL9u0OQgWcUtgRO.jpg
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\IMG_2127.jpg
+Content Type: image/jpeg
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_2128-TaAdXOG7vWCAGG3QK98ljzKapOJLEf.jpg
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\IMG_2128.jpg
+Content Type: image/jpeg
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_2129-cBypH92IL2yYLABKpGuq0F4uR4eG7y.jpg
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\IMG_2129.jpg
+Content Type: image/jpeg
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/IMG_2130-Nkq25Kgt6T8rTOecBYbF3yZuJqi60I.jpg
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\IMG_2130.jpg
+Content Type: image/jpeg
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ScreenRecording_05-11-2026 00-13-46_1-MgU5QxEUpDr4diiG8TgDs1ZrF49XRX.mp4
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\ScreenRecording_05-11-2026%2000-13-46_1.mp4
+Content Type: video/mp4
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ScreenRecording_05-11-2026 00-14-17_1-pMP2AjfB1IYYdXigrXjjD5TIHTWlXv.mp4
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\ScreenRecording_05-11-2026%2000-14-17_1.mp4
+Content Type: video/mp4
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ssstik.io_1778469837948-HLduNCMwoATdEeEw2utUl8nGSCnVAr.mp4
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\ssstik.io_1778469837948.mp4
+Content Type: video/mp4
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ssstik.io_1778469999607-6mKdJCu1nNK5oxwwVdkfMnKdMpjCvu.mp4
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\ssstik.io_1778469999607.mp4
+Content Type: video/mp4
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ssstik.io_1778470069039-ay6B5KEhdOlf4XxFJoOCRmmld6DrXT.mp4
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\ssstik.io_1778470069039.mp4
+Content Type: video/mp4
+
+Uri: https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ssstik.io_1778470345277-nhUUWi5Qx2ggp8hNIhV0gpihKxNwwQ.mp4
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\ssstik.io_1778470345277.mp4
+Content Type: video/mp4
+
+Uri: https://www.facebook.com/tr?id=947311608166460&ev=PageView&noscript=1
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\tr
+Content Type: text/plain
+
+Uri: https://www.googletagmanager.com/gtag/js?id=G-T97D5YGDDS
+File Name: C:\Downloaded Web Sites\barbousbodysplash.vercel.app\gtag\js
+Content Type: application/javascript
+

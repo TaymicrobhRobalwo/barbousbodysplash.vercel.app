@@ -1,0 +1,16 @@
+{
+  "name": "barbours-native-checkout",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "vercel dev",
+    "lint": "node -e \"console.log('Static project: no lint configured')\""
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "vercel": "latest"
+  }
+}

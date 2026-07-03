@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkout | Barbour's Beauty</title>
+  <link rel="stylesheet" href="checkout.css">
+</head>
+<body>
+  <main class="checkout-shell">
+    <section id="summaryScreen" class="screen active">
+      <header class="topbar">
+        <strong>Resumo do pedido</strong>
+        <span>♡ Seus dados estão seguros conosco</span>
+      </header>
+
+      <button class="address-strip" id="openCustomer" type="button">
+        <span class="pin">⌾</span>
+        <span><b id="addressTitle">Preencha seus dados</b><small id="addressSubtitle">Identificação e endereço de entrega</small></span>
+        <span>›</span>
+      </button>
+      <div class="barcode"></div>
+
+      <div class="brand">Barbour's Beauty</div>
+      <div class="timer">◷ Seu pedido expira em <b id="countdown">00:20:00</b></div>
+
+      <article class="product-row">
+        <img src="IMG_2103.jpg" alt="Kit 4 Body Splash" id="productImage">
+        <div>
+          <h1 id="productName">Kit 4 Body Splash Barbours Beauty 200ml | Delight + Very Sexy + Roses ...</h1>
+          <strong id="productPrice">R$97,49</strong>
+        </div>
+        <small>1 un.</small>
+      </article>
+
+      <section class="card summary-card">
+        <h2>Resumo do pedido</h2>
+        <p><span>Subtotal do produto</span><b id="subtotalText">R$97,49</b></p>
+        <p class="muted"><span>Frete</span><span>R$0,00</span></p>
+        <p class="total"><span>Total</span><b id="totalTopText">R$97,49</b></p>
+      </section>
+
+      <section class="card payment-card">
+        <h2>Forma de pagamento</h2>
+        <label class="payment disabled">
+          <span class="payicon">▭</span>
+          <span><b>Cartão de crédito</b><small>Indisponível neste checkout.</small></span>
+          <i></i>
+        </label>
+        <label class="payment selected">
+          <span class="payicon pixicon">◆</span>
+          <span><b>Pix</b><small>Pague e obtenha confirmação instantânea.</small></span>
+          <i></i>
+        </label>
+      </section>
+
+      <section class="offers-wrap">
+        <div class="offers-head">
+          <p>Temos <b id="offerCount">4 ofertas</b> disponíveis para você:</p>
+          <div><button id="prevOffer" type="button">‹</button><button id="nextOffer" type="button">›</button></div>
+        </div>
+        <article class="offer" id="offerCard"></article>
+        <small class="exclusive">Essa oferta é exclusiva para esta compra e não voltará!</small>
+        <div class="dots" id="offerDots"></div>
+      </section>
+
+      <footer class="sticky-total">
+        <span>Total <small>(<b id="itemCount">1</b> item)</small></span>
+        <strong id="footerTotal">R$97,49</strong>
+        <button id="payButton" type="button">Pagar</button>
+      </footer>
+    </section>
+
+    <section id="customerScreen" class="screen form-screen">
+      <header class="form-top"><button class="back" data-back="summaryScreen" type="button">‹</button><b>Preencha seus dados</b></header>
+      <form id="customerForm" class="form-card">
+        <label>Nome completo<input name="name" placeholder="Nome e sobrenome" required></label>
+        <label>E-mail<input name="email" type="email" placeholder="seuemail@hotmail.com"></label>
+        <label class="checkline"><input name="noEmail" type="checkbox"> Não tenho e-mail</label>
+        <div class="grid2">
+          <label>Telefone<input name="phone" inputmode="tel" placeholder="DDD + número" required></label>
+          <label>CPF<input name="cpf" inputmode="numeric" placeholder="123.456.789-12" required></label>
+        </div>
+        <button class="primary" type="submit">Ir para a entrega</button>
+      </form>
+    </section>
+
+    <section id="addressScreen" class="screen form-screen">
+      <header class="form-top"><button class="back" data-back="customerScreen" type="button">‹</button><b>Preencha seus dados</b></header>
+      <form id="addressForm" class="form-card">
+        <p class="other">Outra pessoa irá receber o pedido? <a href="#">Clique aqui</a></p>
+        <label>CEP<input name="cep" id="cep" inputmode="numeric" placeholder="12345-000" required></label>
+        <label>Endereço<input name="street" id="street" placeholder="Alameda das Paineiras" required></label>
+        <div class="grid2 number-grid">
+          <label>Número<input name="number" placeholder="123" required></label>
+          <label>Bairro<input name="neighborhood" id="neighborhood" placeholder="Cidade Jardim" required></label>
+        </div>
+        <label class="checkline"><input name="noNumber" type="checkbox"> S/N</label>
+        <label>Complemento<input name="complement" placeholder="Apartamento e bloco"></label>
+        <label>Cidade<input name="city" id="city" placeholder="Lagoa da Prata" required></label>
+        <label>Estado<select name="state" id="state" required><option>Minas Gerais</option><option>São Paulo</option><option>Rio de Janeiro</option><option>Bahia</option><option>Paraná</option><option>Santa Catarina</option><option>Rio Grande do Sul</option></select></label>
+        <label>País<select name="country"><option>Brasil</option></select></label>
+        <p class="shipping-title">Escolha o melhor frete para você</p>
+        <label class="shipping"><span></span><b>Frete Grátis<small>2 a 5 dias úteis</small></b><strong>Grátis</strong></label>
+        <small class="forecast">A previsão de entrega pode variar de acordo com a região e facilidade de acesso ao seu endereço</small>
+        <button class="primary" type="submit">Ir para o pagamento</button>
+      </form>
+    </section>
+
+    <section id="pixScreen" class="screen pix-screen">
+      <div class="pix-bg">
+        <header>Código do pagamento</header>
+        <div class="waiting">
+          <h2>Aguardando o pagamento<br><span id="pixAmountTitle">R$97,49</span></h2>
+          <div class="clock">◷</div>
+        </div>
+        <p>Cobrado como <b id="chargedAs">R$97,49</b></p>
+        <p>Vence em <b class="pix-timer" id="pixCountdown">00:10:00</b></p>
+        <p>Prazo <b id="pixDeadline">00:20, 03 de jul 2026</b></p>
+        <div class="pix-box">
+          <b class="pix-brand">◆ pix <span>PIX</span></b>
+          <code id="pixCode">Gerando código Pix...</code>
+          <button id="copyPix" type="button">⧉ Copiar</button>
+        </div>
+        <h3>Como fazer pagamentos com PIX?</h3>
+        <ol>
+          <li>Abra o app do seu banco ou instituição de pagamento.</li>
+          <li>Selecione a opção PIX e escolha "Pix Copia e Cola".</li>
+          <li>Cole o código acima e confirme o pagamento.</li>
+        </ol>
+      </div>
+    </section>
+  </main>
+  <script src="checkout.js"></script>
+</body>
+</html>

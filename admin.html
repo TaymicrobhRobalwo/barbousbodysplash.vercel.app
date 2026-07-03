@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Checkout | Barbour's Beauty</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <aside>
+    <h1>Checkout Admin</h1>
+    <button data-tab="settings" class="active">Configurações</button>
+    <button data-tab="gateway">Gateway Pix</button>
+    <button data-tab="orders">Pedidos</button>
+    <button data-tab="meta">Meta Pixel</button>
+    <button data-tab="tiktok">TikTok Pixel</button>
+  </aside>
+  <main>
+    <div id="login" class="login card">
+      <h2>Acesso admin</h2>
+      <p>Informe o `ADMIN_TOKEN` configurado na Vercel.</p>
+      <input id="token" type="password" placeholder="ADMIN_TOKEN">
+      <button id="saveToken">Entrar</button>
+    </div>
+
+    <section id="app" class="hidden">
+      <header class="page-head"><h2 id="pageTitle">Configurações</h2><button id="reload">Atualizar</button></header>
+
+      <div id="settings" class="tab active card">
+        <h3>Produto principal</h3>
+        <div class="grid">
+          <label>Nome da loja<input id="storeName"></label>
+          <label>Nome do produto<input id="productName"></label>
+          <label>Preço em centavos<input id="price" type="number"></label>
+          <label>Preço comparativo em centavos<input id="compareAtPrice" type="number"></label>
+          <label>Imagem<input id="image"></label>
+          <label>Timer em minutos<input id="expirationMinutes" type="number"></label>
+        </div>
+        <h3>Ofertas adicionais</h3>
+        <div id="offersEditor"></div>
+        <button id="addOffer" class="secondary">Adicionar oferta</button>
+        <button id="saveSettings">Salvar configurações</button>
+      </div>
+
+      <div id="gateway" class="tab card">
+        <h3>Chaves Freepay</h3>
+        <p class="warn">As chaves são salvas no Supabase via backend. Use HTTPS e mantenha o ADMIN_TOKEN privado.</p>
+        <div class="grid">
+          <label>Public Key<input id="publicKey"></label>
+          <label>Secret Key<input id="secretKey" type="password"></label>
+          <label>Nome enviado no metadata<input id="providerName"></label>
+          <label>Webhook/Postback URL<input id="postbackUrl"></label>
+          <label>Pix expira em dias<input id="pixExpiresInDays" type="number"></label>
+        </div>
+        <div class="mask-box">
+          <b>Privacidade enviada ao gateway</b>
+          <span>ID externo: <code>ORD-XXXXXXXX</code></span>
+          <span>UTMs: não enviadas ao gateway</span>
+          <span>Provedor: <code>Elly Perfumaria</code> ou valor configurado acima</span>
+        </div>
+        <button id="saveGateway">Salvar gateway</button>
+      </div>
+
+      <div id="orders" class="tab card">
+        <h3>Pedidos</h3>
+        <div class="table-wrap"><table><thead><tr><th>Pedido</th><th>Status</th><th>Total</th><th>Cliente</th><th>Gateway</th><th>Criado em</th></tr></thead><tbody id="ordersBody"></tbody></table></div>
+      </div>
+
+      <div id="meta" class="tab card pixel-tab" data-platform="meta">
+        <h3>Meta Pixel</h3>
+        <p>Cadastre quantos pixels quiser. O checkout dispara PageView, InitiateCheckout e Purchase.</p>
+        <div class="pixel-form grid">
+          <label>Nome<input class="pixelName" placeholder="Pixel principal"></label>
+          <label>Pixel ID<input class="pixelId" placeholder="123456789"></label>
+          <label>Access Token opcional<input class="pixelToken"></label>
+        </div>
+        <button class="addPixel">Adicionar Meta Pixel</button>
+        <div class="pixelList"></div>
+      </div>
+
+      <div id="tiktok" class="tab card pixel-tab" data-platform="tiktok">
+        <h3>TikTok Pixel</h3>
+        <p>Cadastre quantos pixels quiser. O checkout dispara PageView, InitiateCheckout e Purchase.</p>
+        <div class="pixel-form grid">
+          <label>Nome<input class="pixelName" placeholder="TikTok principal"></label>
+          <label>Pixel ID<input class="pixelId" placeholder="DXXXXXXXXXXXX"></label>
+          <label>Access Token opcional<input class="pixelToken"></label>
+        </div>
+        <button class="addPixel">Adicionar TikTok Pixel</button>
+        <div class="pixelList"></div>
+      </div>
+    </section>
+  </main>
+  <script src="admin.js"></script>
+</body>
+</html>
