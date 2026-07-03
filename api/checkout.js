@@ -40,6 +40,7 @@ module.exports = async function handler(req, res) {
     const body = await readBody(req);
     const product = await getSetting("product");
     const gateway = await getSetting("gateway");
+    const gatewayNames = await getSetting("gateway_names");
     const offers = await getSetting("offers");
     const selectedOfferIds = new Set(body.offerIds || []);
     const enabledOffers = (offers || []).filter((offer) => offer.enabled && selectedOfferIds.has(offer.id));
@@ -48,21 +49,32 @@ module.exports = async function handler(req, res) {
     const customer = body.customer || {};
     const address = body.address || {};
 
+    const alternateNames = Array.isArray(gatewayNames?.names) ? [...new Set(gatewayNames.names.map((name) => String(name).trim()).filter(Boolean))] : [];
+    const pickGatewayName = (realTitle) => gatewayNames?.enabled && alternateNames.length
+      ? alternateNames[Math.floor(Math.random() * alternateNames.length)]
+      : realTitle;
+
+    const mainRealTitle = product.productName;
+    const mainSentTitle = pickGatewayName(mainRealTitle);
     const mainItem = {
-      title: product.productName,
+      title: mainSentTitle,
       unit_price: cents(product.price),
       quantity: Number(product.quantity || 1),
       tangible: true,
       external_ref: publicId,
     };
     const offerItems = enabledOffers.map((offer, index) => ({
-      title: offer.name,
+      title: pickGatewayName(offer.name),
       unit_price: cents(offer.price),
       quantity: 1,
       tangible: true,
       external_ref: `${publicId}-OFFER-${index + 1}`,
     }));
     const items = [mainItem, ...offerItems];
+    const localItems = [
+      { ...mainItem, real_title: mainRealTitle, sent_title: mainSentTitle },
+      ...enabledOffers.map((offer, index) => ({ ...offerItems[index], real_title: offer.name, sent_title: offerItems[index].title })),
+    ];
     const subtotal = items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
     const shippingFee = 0;
     const amount = subtotal + shippingFee;
@@ -116,11 +128,27 @@ module.exports = async function handler(req, res) {
         pix_expires_at: pix.expiresAt,
         customer,
         shipping_address: address,
-        items,
+        items: localItems,
         utms: body.utms || {},
         raw_gateway_response: gatewayResponse,
       }),
     });
+
+    try {
+      await supabase("checkout_logs", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "gateway",
+          level: "info",
+          source: "freepay",
+          order_public_id: publicId,
+          message: "Transação Pix criada",
+          payload: { providerName, item_name_map: localItems.map((item) => ({ real_title: item.real_title, sent_title: item.sent_title })) },
+          response: gatewayResponse,
+          status_code: 200,
+        }),
+      });
+    } catch (_) {}
 
     send(res, 200, {
       orderId: publicId,
